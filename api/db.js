@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const clientPromise = require('./mongodb-client');
+/* const clientPromise = require('./mongodb-client'); */
 
 const userSchema = new mongoose.Schema({
   login: {
@@ -21,7 +21,7 @@ const User = mongoose.model(
   'Users',
 );
 
-/* mongoose.connect(
+mongoose.connect(
   process.env.MONGO_URI,
   {
     useNewUrlParser: true,
@@ -34,16 +34,16 @@ const User = mongoose.model(
       console.log("Mongo connected");
     };
   }
-); */
+);
 
 module.exports = async function(req, res) {
-  const client = await clientPromise;
+  /* const client = await clientPromise;
 
   const connection = mongoose.createConnection().setClient(client);
 
   if (connection.readyState === 1) {
     console.log('Mongo reusable connection is opened');
-  }
+  } */
 
   if (req.method === 'GET') {
     User.find()
