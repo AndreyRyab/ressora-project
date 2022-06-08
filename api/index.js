@@ -1,4 +1,4 @@
-const { findAll } = require('./controllers/users');
+const { findAllUsers, createUser } = require('./controllers/users');
 
 
 /* const User = mongoose.model(
@@ -27,9 +27,15 @@ const { findAll } = require('./controllers/users');
 module.exports = async function(req, res) {
   if (req.method === 'GET') {
     try {
-      await findAll(req, res);
+      await findAllUsers(req, res);
     } catch (error) {
       console.log(error.message);
+    }
+  } if (req.method === 'POST') {
+    try {
+      await createUser(req, res);
+    } catch (error) {
+      console.log('error: ', error);
     }
   }
 };
