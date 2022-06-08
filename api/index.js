@@ -26,6 +26,10 @@ const { findAll } = require('./controllers/users');
 
 module.exports = async function(req, res) {
   if (req.method === 'GET') {
-    await findAll(req, res);
+    try {
+      await findAll(req, res);
+    } catch (error) {
+      console.log(error.message);
+    }
   }
 };
