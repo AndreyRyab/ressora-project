@@ -15,15 +15,15 @@ exports.findAllUsers = (req, res) => {
 
 exports.login = (req, res) => {
   const { login, password } = req.body;
-  User.find({ login })
+  User.findOne({ login })
     .select('+password')
-    .then((userArray) => {
-      if (!userArray.length) {
+    .then((user) => {
+      if (!user) {
         return res.status(404)
           .send({ message: 'Пользователь с таким логином не найден' })
       }
       bcrypt
-      .compare(password, userArray[0].password)
+      .compare(password, user.password)
       .then((matched) => {
         if (!matched) {
           return res
