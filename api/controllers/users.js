@@ -8,8 +8,41 @@ exports.findAllUsers = (req, res) => {
       res.status(200).send(users);
     })
     .catch((error) => {
+      res.status(400).send({ message: error.message });
       console.log(error.message);;
     });
+};
+
+exports.login = (req, res) => {
+  const { login, password } = req.body;
+  User.find({ login })
+    .select('+password')
+    .then((userArray) => {
+      if (!userArray.length) {
+        return res.status(404)
+          .send({ message: 'Пользователь с таким логином не найден' })
+      }
+      bcrypt
+      .compare(password, userArray[0].password)
+      .then((matched) => {
+        if (!matched) {
+          return res
+          .status(401)
+          .send({ message: 'Неправильные почта или пароль' })
+        }
+          /* const token = jwt.sign(
+            { _id: user._id },
+            NODE_ENV === "production" ? JWT_SECRET : "dev-secret",
+            { expiresIn: "7d" }
+          ); */
+        return res
+          .status(200)
+          .send({ message: 'С паролем всё ок!' })
+        });
+    })
+    .catch((error) => {
+      console.log(error.message);
+    });;
 };
 
 exports.createUser = (req, res) => {

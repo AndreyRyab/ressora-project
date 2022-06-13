@@ -9,7 +9,11 @@ const userSchema = new mongoose.Schema({
     type: String,
     unique: true,
   },
-  password: String,
+  password: {
+    type: String,
+    required: [true, 'Введите пароль'],
+    select: false,
+  },
   admin: Boolean,
 })
 
