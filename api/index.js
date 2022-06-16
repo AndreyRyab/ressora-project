@@ -1,41 +1,18 @@
-const { findAllUsers, createUser } = require('./controllers/users');
-
-
-/* const User = mongoose.model(
-  'User',
-  userSchema,
-  'Users',
-); */
-
-/* module.exports = async function(req, res) {
-  if (req.method === 'GET') {
-    User.find()
-    .then(users => {
-      res.status(200).json(users);
-    })
-    .catch(error => res.status(500).json(error.message));
-  }
-  if (req.method === 'POST') {
-    User.create(req.body)
-    .then(users => {
-      res.status(200).json(users);
-    })
-    .catch(error => res.status(500).json(error.message));
-  }
-} */
+const { findAllUsers, createUser, getCurrentUser } = require('./controllers/users');
+const { auth } = require('./utils/authentication');
 
 module.exports = async function(req, res) {
-  if (req.method === 'GET') {
-    try {
+  try {
+    /* await auth(req, res); */
+    if (req.method === 'GET') {
+      const user = await auth(req, res);
+      /* await getCurrentUser({ ...req, user }, res); */
       await findAllUsers(req, res);
-    } catch (error) {
-      console.log(error.message);
-    }
-  } if (req.method === 'POST') {
-    try {
+    } if (req.method === 'POST') {
       await createUser(req, res);
-    } catch (error) {
-      console.log('error: ', error);
     }
+  } catch (error) {
+    res.status(500).send({ message: error.message });
   }
+  
 };
