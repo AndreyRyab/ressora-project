@@ -2,7 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 var cookie = require('cookie');
 
-const User = require('../models/user');
+const User = require('../_models/user');
 
 exports.findAllUsers = (req, res) => {
   User.find({})
@@ -16,7 +16,9 @@ exports.findAllUsers = (req, res) => {
 };
 
 exports.signin = (req, res) => {
+  req.body = JSON.parse(req.body);
   const { login, password } = req.body;
+  console.log('signin: ', { login, password });
   User.findOne({ login })
     .select('+password')
     .then((user) => {
@@ -59,6 +61,7 @@ exports.signin = (req, res) => {
 };
 
 exports.getCurrentUser = (req, res) => {
+  req.body = JSON.parse(req.body);
   User.findById({ _id: req.body.userId })
     .then((user) => {
       if (!user) {
@@ -67,6 +70,7 @@ exports.getCurrentUser = (req, res) => {
       res.status(200).send(user);
     })
     .catch((err) => {
+      console.log(err.message)
       if (err.name === 'CastError') {
         throw new Error('Переданы некорректные данные');
       }
@@ -74,6 +78,7 @@ exports.getCurrentUser = (req, res) => {
 };
 
 exports.createUser = (req, res) => {
+  req.body = JSON.parse(req.body);
   if (!req.body.login || !req.body.name || !req.body.password) {
     return res.status(400).send({
       message: 'Введите все параметры нового пользователя',

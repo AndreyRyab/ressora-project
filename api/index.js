@@ -1,5 +1,5 @@
-const { findAllUsers, createUser, getCurrentUser } = require('./controllers/users');
-const { auth } = require('./utils/authentication');
+const { findAllUsers, createUser } = require('./_controllers/users');
+const { auth } = require('./_utils/authentication');
 
 module.exports = async function(req, res) {
   try {

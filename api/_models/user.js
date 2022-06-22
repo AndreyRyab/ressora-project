@@ -1,4 +1,4 @@
-const mongoose = require('../utils/db');
+const mongoose = require('../_utils/db');
 
 const userSchema = new mongoose.Schema({
   login: {
@@ -14,7 +14,7 @@ const userSchema = new mongoose.Schema({
     required: [true, 'Введите пароль'],
     select: false,
   },
-  admin: Boolean,
+  admin: String,
 })
 
 module.exports = mongoose.model('user', userSchema);

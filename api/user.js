@@ -1,21 +1,20 @@
-const { signin, createUser, getCurrentUser } = require('./controllers/users');
+const { signin, createUser, getCurrentUser, findAllUsers } = require('./_controllers/users');
 
 module.exports = async function(req, res) {
   if (req.method === 'GET') {
-    if (req.body.userId) {
-      try {
-        await getCurrentUser(req, res);
-      } catch (error) {
-        console.log('error: ', error);
-      }
-    } else {
-      try {
-          await signin(req, res);
-        } catch (error) {
-          console.log('error: ', error);
-        }
+    console.log('getAllUsers from user/api');
+    try {
+      await findAllUsers(req, res);
+    } catch (error) {
+      console.log('error: ', error);
     }
   } else if (req.method === 'POST') {
-    await createUser(req, res);
+    console.log('createUser from user/api');
+    try {
+      req.body = JSON.stringify(req.body);
+      await createUser(req, res);
+    } catch (error) {
+      console.log('error: ', error);
+    }
   }
 };
