@@ -33,8 +33,8 @@
       const { data } = await signin({ ...form.detail, signin: true });
       userMessage = data.message;
     } catch ({ message }) {
-      errorMessage = message;
       throw new Error(message);
+      /* errorMessage = message; */
     } finally {
       isPending = false;
     }
