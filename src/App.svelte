@@ -1,7 +1,7 @@
 <script>
   import SigninForm from './SigninForm.svelte';
   import UserForm from './UserForm.svelte'
-  import { createNewUser, getAllUsers } from './apiCalls.js';
+  import { createNewUser, getAllUsers, getCurrentUser, signin } from './apiCalls.js';
 
   
   const api = '/api/user';
@@ -14,12 +14,26 @@
   let userMessage;
   let fetchedUser;
 
-  const createUser = async (data) => {
+  const createUser = async (form) => {
     try {
       isPending = true;
-      form = data.detail;
-      createNewUser(form).then(newUser => createdUser = newUser);
+      const { data } = await createNewUser(form.detail)/* .then(newUser => createdUser = newUser) */;
+      createdUser = data;
     } catch ({ message }) {
+      errorMessage = message;
+      throw new Error(message);
+    } finally {
+      isPending = false;
+    }
+  }
+
+  const login = async (form) => {
+    try {
+      isPending = true;
+      const { data } = await signin({ ...form.detail, signin: true });
+      userMessage = data.message;
+    } catch ({ message }) {
+      errorMessage = message;
       throw new Error(message);
     } finally {
       isPending = false;
@@ -29,97 +43,41 @@
   const getUsers = async () => {
     try {
       isPending = true;
-      getAllUsers().then(allUsers => users = allUsers);
+      const { data } = await getAllUsers();
+      users = data;
     } catch ({ message }) {
+      errorMessage = message;
       throw new Error(message);
     } finally {
       isPending = false;
     }
   }
 
-  /* const createUser = async (data) => {
-    isPending = true;
-    form = data.detail;
+  const getUser = async (/* { userId: '???' } */) => {
     try {
-      const res = await fetch(api, {
-        body: JSON.stringify(form),
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      createdUser = await res.json();
+      isPending = true;
+      const { data } = await getCurrentUser({ userId: '62a7382aae887fa1bff6c41f' });
+      fetchedUser = data;
     } catch ({ message }) {
       errorMessage = message;
+      throw new Error(message);
     } finally {
       isPending = false;
     }
-  } */
-
-  const signin = async (data) => {
-    isPending = true;
-    form = { ...data.detail, method: 'signin' };
-    try {
-      const res = await fetch(api, {
-        body: JSON.stringify(form),
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      userMessage = await res.json().message;
-    } catch ({ message }) {
-      errorMessage = message;
-    } finally {
-      isPending = false;
-    }
-  }
-
-  const getCurrentUser = async (/* data */) => {
-    isPending = true;
-    form = { /* ...data.detail, */ method: 'getCurrentUser', userId: '62a7382aae887fa1bff6c41f', }; // TODO Remove hardcode
-    try {
-      const res = await fetch(api, {
-        body: JSON.stringify(form),
-        method: 'POST',
-        /* headers: {
-          'Content-Type': 'application/json',
-        }, */
-      });
-      userMessage = await res.json().message;
-    } catch ({ message }) {
-      errorMessage = message;
-    } finally {
-      isPending = false;
-    }
-  }
-
-  /* const getUsers = async () => {
-    isPending = true;
-    try {
-      const res = await fetch(api, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      users = await res.json();
-    } catch ({ message }) {
-      errorMessage = message;
-    } finally {
-      isPending = false;
-    }
-  } */
+  };
 
 </script>
 
 <main>
   <h1>Hello Andrey!</h1>
   
-  <button class="button" on:click={getCurrentUser}>get user</button>
+  <button class="button" on:click={getUser}>get user</button>
   <button class="button" on:click={getUsers}>вывести всех пользователей</button>
-
+  
   <section class="results">
+    {#if userMessage }
+    userMessage: { userMessage }
+    {/if}
     {#if isPending }
       Loading...
       {#if errorMessage}
@@ -127,20 +85,16 @@
       {:else}
         'No errors'
       {/if}
-    {:else}
+    {/if}
+    {#if users.length}
       <ul>
         {#each users as user}
         <li>{ user.name }</li>
-        {:else}
-        <li>Empty list</li>
         {/each}
       </ul>
     {/if}
-    {#if userMessage }
-    userMessage: { userMessage }
-    {/if}
     {#if fetchedUser }
-    fetchedUser: { fetchedUser }
+    <p class="fetched-user">fetchedUser: { JSON.stringify(fetchedUser) }</p>
     {/if}
     {#if form }
     Form: { JSON.stringify(form) }
@@ -151,7 +105,7 @@
   </section>
   <section class="forms">
     <UserForm on:submitCreateUser={ createUser } />
-    <SigninForm on:submitSignin={ signin } />
+    <SigninForm on:submitSignin={ login } />
   </section>
 
 </main>
@@ -180,13 +134,17 @@
   }
   .results {
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap;
     margin-top: 50px;
     width: 80%;
     min-height: 200px;
     background-color: antiquewhite;
   }
-
+  
+  .fetched-user {
+    width: 70%;
+    word-break: break-word;
+  }
   .forms {
     display: flex;
     flex-wrap: wrap;

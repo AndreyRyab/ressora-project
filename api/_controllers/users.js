@@ -5,6 +5,7 @@ var cookie = require('cookie');
 const User = require('../_models/user');
 
 exports.findAllUsers = (req, res) => {
+  console.log('contr, findAllUsers');
   User.find({})
     .then((users) => {
       res.status(200).send(users);
