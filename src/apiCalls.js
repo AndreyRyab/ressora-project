@@ -1,6 +1,8 @@
 import axios from 'axios';
 
 const apiUser = '/api/user';
+const apiSignin = '/api/signin';
+const apiLogout = '/api/logout';
 
 export const createNewUser = async (data) => {
   try {
@@ -37,9 +39,10 @@ export const getCurrentUser = async (data) => {
 }
 
 export const signin = async (data) => {
+  console.log('signin from apiCalls');
   try {
     const res = await axios.request({
-      url: apiUser,
+      url: apiSignin,
       method: 'post',
       data,
       headers: {
@@ -53,6 +56,23 @@ export const signin = async (data) => {
   }
 }
 
+export const logout = async (data) => {
+  console.log('logout from apiCalls');
+  try {
+    const res = await axios.request({
+      url: apiLogout,
+      method: 'post',
+      data,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      responseType: 'json',
+    });
+    return res;
+  } catch ({ message }) {
+    throw new Error(message);
+  }
+}
 
 export const getAllUsers = async () => {
   try {

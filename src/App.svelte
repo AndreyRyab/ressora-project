@@ -1,7 +1,13 @@
 <script>
   import SigninForm from './SigninForm.svelte';
   import UserForm from './UserForm.svelte'
-  import { createNewUser, getAllUsers, getCurrentUser, signin } from './apiCalls.js';
+  import {
+    createNewUser,
+    getAllUsers,
+    getCurrentUser,
+    signin,
+    logout,
+  } from './apiCalls.js';
 
   
   const api = '/api/user';
@@ -27,14 +33,27 @@
     }
   }
 
-  const login = async (form) => {
+  const signIn = async (form) => {
     try {
       isPending = true;
-      const { data } = await signin({ ...form.detail, signin: true });
+      const { data } = await signin(form.detail);
       userMessage = data.message;
     } catch ({ message }) {
+      errorMessage = message;
       throw new Error(message);
-      /* errorMessage = message; */
+    } finally {
+      isPending = false;
+    }
+  }
+
+  const logOut = async (form) => {
+    try {
+      isPending = true;
+      const { data } = await logout(/* form.detail */{ userId: '62a7382aae887fa1bff6c41f' });
+      userMessage = data.message;
+    } catch ({ message }) {
+      errorMessage = message;
+      throw new Error(message);
     } finally {
       isPending = false;
     }
@@ -73,6 +92,7 @@
   
   <button class="button" on:click={getUser}>get user</button>
   <button class="button" on:click={getUsers}>вывести всех пользователей</button>
+  <button class="button" on:click={logOut}>logOut</button>
   
   <section class="results">
     {#if userMessage }
@@ -105,7 +125,7 @@
   </section>
   <section class="forms">
     <UserForm on:submitCreateUser={ createUser } />
-    <SigninForm on:submitSignin={ login } />
+    <SigninForm on:submitSignin={ signIn } />
   </section>
 
 </main>

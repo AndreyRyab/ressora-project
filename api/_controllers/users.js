@@ -4,6 +4,12 @@ var cookie = require('cookie');
 
 const User = require('../_models/user');
 
+const cookiesOptions = {
+  httpOnly: true,
+  sameSite: true,
+  secure: true,
+}
+
 exports.findAllUsers = (req, res) => {
   console.log('contr, findAllUsers');
   User.find({})
@@ -17,6 +23,7 @@ exports.findAllUsers = (req, res) => {
 };
 
 exports.signin = (req, res) => {
+  console.log('signin from controllers');
   req.body = JSON.parse(req.body);
   const { login, password } = req.body;
   console.log('signin: ', { login, password });
@@ -39,14 +46,12 @@ exports.signin = (req, res) => {
             { _id: user._id },
             process.env.NODE_ENV === 'production' ? JWT_SECRET : 'dev-secret',
             { expiresIn: '7d' },
-          );
-          try {
-            return res
-            .setHeader('Set-Cookie', cookie.serialize('jwt', token, {
-              maxAge: 3600000 * 24 * 7,
-              httpOnly: true,
-              sameSite: true,
-              secure: true,
+            );
+            try {
+              return res
+              .setHeader('Set-Cookie', cookie.serialize('jwt', token, {
+                maxAge: 3600000 * 24 * 7,
+                ...cookiesOptions,
             }))
             .status(200)
             .send({ message: 'С паролем всё ок!' });
@@ -55,6 +60,36 @@ exports.signin = (req, res) => {
             res.status(500).send({ message: 'Проблема с jwt-токеном'})
           }
       });
+    })
+    .catch((error) => {
+      console.log(error.message);
+    });
+};
+
+exports.logout = (req, res) => {
+  req.body = JSON.parse(req.body);
+  console.log('logout from controllers: ', req.body.userId);
+  User.findById({ _id: req.body.userId })
+    .then((user) => {
+      if (!user) {
+        return res.status(404)
+          .send({ message: 'Пользователь не найден' })
+      }
+      try {
+        return res
+          .setHeader('Set-Cookie', cookie.serialize('jwt', null, {
+            maxAge: 0,
+            ...cookiesOptions,
+          }))
+          .send({ message: 'Вы успешно разлогинились' })
+          .end();
+      } catch(error) {
+        if (error.name === 'CastError') {
+          throw new Error('Переданы некорректные данные');
+        }
+        console.log(error.message);
+        res.status(500).send({ message: 'Проблема с jwt-токеном'})
+      }
     })
     .catch((error) => {
       console.log(error.message);

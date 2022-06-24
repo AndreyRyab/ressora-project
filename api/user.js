@@ -14,19 +14,10 @@ module.exports = async function(req, res) {
     } catch (error) {
       console.log('error: ', error);
     }
-  } else if (req.body.signin) {
-    try {
-      console.log('signin from user/api');
-
-      req.body = JSON.stringify(req.body);
-      await signin(req, res);
-    } catch (error) {
-      console.log('error: ', error);
-    }
   } else if (req.body.userId) {
     try {
       console.log('getCurrentUser from user/api');
-      
+
       req.body = JSON.stringify(req.body);
       await getCurrentUser(req, res);
     } catch (error) {
