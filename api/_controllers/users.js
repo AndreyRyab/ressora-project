@@ -4,7 +4,7 @@ var cookie = require('cookie');
 
 const User = require('../_models/user');
 
-const cookiesOptions = {
+const cookieOptions = {
   httpOnly: true,
   sameSite: true,
   secure: true,
@@ -50,8 +50,9 @@ exports.signin = (req, res) => {
             try {
               return res
               .setHeader('Set-Cookie', cookie.serialize('jwt', token, {
+                ...cookieOptions,
                 maxAge: 3600000 * 24 * 7,
-                ...cookiesOptions,
+                sameSite: false,
             }))
             .status(200)
             .send({ message: 'С паролем всё ок!' });
@@ -79,7 +80,7 @@ exports.logout = (req, res) => {
         return res
           .setHeader('Set-Cookie', cookie.serialize('jwt', null, {
             maxAge: 0,
-            ...cookiesOptions,
+            ...cookieOptions,
           }))
           .send({ message: 'Вы успешно разлогинились' })
           .end();
