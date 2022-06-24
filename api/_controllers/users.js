@@ -44,7 +44,8 @@ exports.signin = (req, res) => {
         }
           const token = jwt.sign(
             { _id: user._id },
-            process.env.NODE_ENV === 'production' ? JWT_SECRET : 'dev-secret',
+            /* process.env.NODE_ENV === 'production' ? JWT_SECRET : 'dev-secret', */
+            'dev-secret',
             { expiresIn: '7d' },
             );
             try {
@@ -52,7 +53,6 @@ exports.signin = (req, res) => {
               .setHeader('Set-Cookie', cookie.serialize('jwt', token, {
                 ...cookieOptions,
                 maxAge: 3600000 * 24 * 7,
-                sameSite: false,
             }))
             .status(200)
             .send({ message: 'С паролем всё ок!' });
