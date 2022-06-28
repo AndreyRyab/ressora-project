@@ -97,6 +97,32 @@ exports.logout = (req, res) => {
     });
 };
 
+exports.deleteUser = (req, res) => {
+  req.body = JSON.parse(req.body);
+  console.log('deleteUser from controllers: ', req.body.userId);
+  try {
+    User.findOneAndDelete({ _id: req.body.userId })
+      .then((user) => {
+        if (!user) {
+          return res.status(404)
+            .send({ message: 'Пользователь не найден' })
+        }
+        return res
+          .send({
+            message: `Пользователь ${user._id} удалён.`,
+            _id: user._id,
+          })
+          .end();
+      });
+  } catch(error) {
+    if (error.name === 'CastError') {
+      throw new Error('Переданы некорректные данные');
+    }
+    console.log(error.message);
+    res.status(500).send({ message: 'Не смогли удалить пользователя, попробуйте ещё раз.'})
+  }
+};
+
 exports.getCurrentUser = (req, res) => {
   req.body = JSON.parse(req.body);
   User.findById({ _id: req.body.userId })

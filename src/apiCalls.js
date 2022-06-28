@@ -13,6 +13,15 @@ export const createNewUser = async (data) => {
   }
 };
 
+export const deleteUser = async (data) => {
+  try {
+    console.log('apiCalls deleteUser');
+    return api(apiUser, 'delete', data);
+  } catch ({ message }) {
+    console.log(message);
+  }
+};
+
 export const signin = async (data) => {
   try {
     console.log('apiCalls signin');

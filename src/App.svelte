@@ -1,16 +1,16 @@
 <script>
   import SigninForm from './SigninForm.svelte';
-  import UserForm from './UserForm.svelte'
+  import UserForm from './UserForm.svelte';
+  import UserItem from './UserItem.svelte';
+
   import {
     createNewUser,
     getAllUsers,
     getCurrentUser,
     signin,
     logout,
+    deleteUser,
   } from './apiCalls.js';
-
-  
-  const api = '/api/user';
 
   let isPending = false;
   let errorMessage = '';
@@ -19,6 +19,8 @@
   let form;
   let userMessage;
   let fetchedUser;
+
+  let deletedUserId;
 
   const createUser = async (form) => {
     try {
@@ -85,6 +87,21 @@
     }
   };
 
+  const deleteCheckedUser = async (event) => {
+    deletedUserId = event.detail.userId;
+    try {
+      isPending = true;
+      const { data } = await deleteUser({ userId: deletedUserId });
+      users = users.filter((user) => user._id !== data._id)
+      deletedUserId = data._id;
+    } catch ({ message }) {
+      errorMessage = message;
+      throw new Error(message);
+    } finally {
+      isPending = false;
+    }
+  }
+
 </script>
 
 <main>
@@ -95,6 +112,7 @@
   <button class="button" on:click={logOut}>logOut</button>
   
   <section class="results">
+    p удалённый {deletedUserId}
     {#if userMessage }
     userMessage: { userMessage }
     {/if}
@@ -106,10 +124,20 @@
         'No errors'
       {/if}
     {/if}
+    <!-- <UserItem on:deleteUser={deleteCheckedUser} userId={'userId 1'} userName={'Имя пользователя'} userLogin={'Длинный логин'} isAdmin={'админ'}/>
+    <UserItem on:deleteUser={deleteCheckedUser} userId={'userId 2'} userName={'Имя пользователя'} userLogin={'Длинный логин'} isAdmin={'админ'}/> -->
     {#if users.length}
-      <ul>
-        {#each users as user}
-        <li>{ user.name }</li>
+      <ul class="user-list">
+        {#each users as user (user._id)}
+        <li>
+          <UserItem
+            userId={user._id}
+            userName={user.name}
+            userLogin={user.login}
+            isAdmin={user.admin}
+            on:deleteUser={deleteCheckedUser}
+          />
+        </li>
         {/each}
       </ul>
     {/if}
@@ -148,6 +176,13 @@
 		font-weight: 100;
 	}
 
+  ul {
+    margin: 0;
+    width: 100%;
+    padding: 0;
+    list-style: none;
+  }
+
   .button {
     margin-top: 24px;
     padding: 12px;
@@ -158,6 +193,7 @@
     margin-top: 50px;
     width: 80%;
     min-height: 200px;
+    padding: 12px;
     background-color: antiquewhite;
   }
   
