@@ -25,9 +25,12 @@ export const deleteUser = async (data) => {
 export const signin = async (data) => {
   try {
     console.log('apiCalls signin');
-    return api(apiSignin, 'post', data);
+    /* const result = */ return api(apiSignin, 'post', data);
+    /* console.log('apiCalls signin result: ', result);
+    return result; */
   } catch ({ message }) {
     console.log(message);
+    /* throw new Error('Error from apiCalls signin'); */
   }
 };
 

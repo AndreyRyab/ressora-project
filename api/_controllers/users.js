@@ -1,8 +1,15 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-var cookie = require('cookie');
+const cookie = require('cookie');
 
 const User = require('../_models/user');
+
+const {
+  NOT_FOUND_USER,
+  LOGIN_PASSWORD_ERR,
+  JWT_ERROR,
+  SERVER_ERR,
+} = require('../_errors/errors-constants');
 
 const cookieOptions = {
   httpOnly: true,
@@ -14,7 +21,7 @@ exports.findAllUsers = (req, res) => {
   console.log('contr, findAllUsers');
   User.find({})
     .then((users) => {
-      res.status(200).send(users);
+      res.status(200).send(users.reverse());
     })
     .catch((error) => {
       res.status(400).send({ message: error.message });
@@ -26,44 +33,58 @@ exports.signin = (req, res) => {
   console.log('signin from controllers');
   req.body = JSON.parse(req.body);
   const { login, password } = req.body;
-  console.log('signin: ', { login, password });
   User.findOne({ login })
     .select('+password')
     .then((user) => {
       if (!user) {
-        return res.status(404)
-          .send({ message: 'Пользователь с таким логином не найден' })
+        throw new Error(NOT_FOUND_USER);
       }
       bcrypt
       .compare(password, user.password)
       .then((matched) => {
         if (!matched) {
-          return res
-          .status(401)
-          .send({ message: 'Неправильные логин или пароль' })
+          throw new Error(LOGIN_PASSWORD_ERR);
         }
+
+        try {
           const token = jwt.sign(
             { _id: user._id },
             /* process.env.NODE_ENV === 'production' ? JWT_SECRET : 'dev-secret', */
             'dev-secret',
             { expiresIn: '7d' },
-            );
-            try {
-              return res
-              .setHeader('Set-Cookie', cookie.serialize('jwt', token, {
+          );
+          return res
+          .setHeader(
+            'Set-Cookie', cookie.serialize(
+              'jwt',
+              token,
+              {
                 ...cookieOptions,
                 maxAge: 3600000 * 24 * 7,
-            }))
-            .status(200)
-            .send({ message: 'С паролем всё ок!' });
-          } catch(error) {
-            console.log(error.message);
-            res.status(500).send({ message: 'Проблема с jwt-токеном'})
-          }
+              },
+            )
+          )
+          .status(200)
+          .send({ message: 'С паролем всё ок!' });
+        } catch(error) {
+          console.log(error.message);
+          throw new Error(JWT_ERROR);
+        }
+      })
+      .catch(({ message }) => {
+        console.log('controllers error: ', message);
+        if (message === LOGIN_PASSWORD_ERR) {
+          return res.status(401).send();
+        } else if (message === JWT_ERROR) {
+          return res.status(501).send();
+        } return res.status(500).send();
       });
     })
-    .catch((error) => {
-      console.log(error.message);
+    .catch(({ message }) => {
+      console.log('controllers error: ', message);
+      if (message === NOT_FOUND_USER) {
+        return res.status(404).send();
+      } return res.status(500).send();
     });
 };
 

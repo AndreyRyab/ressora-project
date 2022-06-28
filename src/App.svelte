@@ -29,7 +29,6 @@
       createdUser = data;
     } catch ({ message }) {
       errorMessage = message;
-      throw new Error(message);
     } finally {
       isPending = false;
     }
@@ -42,7 +41,6 @@
       userMessage = data.message;
     } catch ({ message }) {
       errorMessage = message;
-      throw new Error(message);
     } finally {
       isPending = false;
     }
@@ -55,7 +53,6 @@
       userMessage = data.message;
     } catch ({ message }) {
       errorMessage = message;
-      throw new Error(message);
     } finally {
       isPending = false;
     }
@@ -68,7 +65,6 @@
       users = data;
     } catch ({ message }) {
       errorMessage = message;
-      throw new Error(message);
     } finally {
       isPending = false;
     }
@@ -81,7 +77,6 @@
       fetchedUser = data;
     } catch ({ message }) {
       errorMessage = message;
-      throw new Error(message);
     } finally {
       isPending = false;
     }
@@ -96,7 +91,6 @@
       deletedUserId = data._id;
     } catch ({ message }) {
       errorMessage = message;
-      throw new Error(message);
     } finally {
       isPending = false;
     }
@@ -112,17 +106,17 @@
   <button class="button" on:click={logOut}>logOut</button>
   
   <section class="results">
-    p удалённый {deletedUserId}
+    <!-- <p>errorMessage: {errorMessage}</p> -->
     {#if userMessage }
     userMessage: { userMessage }
     {/if}
     {#if isPending }
       Loading...
-      {#if errorMessage}
-        { errorMessage }
-      {:else}
-        'No errors'
-      {/if}
+    {/if}
+    {#if errorMessage}
+      errorMessage: { errorMessage }
+    {:else}
+      'No errors'
     {/if}
     <!-- <UserItem on:deleteUser={deleteCheckedUser} userId={'userId 1'} userName={'Имя пользователя'} userLogin={'Длинный логин'} isAdmin={'админ'}/>
     <UserItem on:deleteUser={deleteCheckedUser} userId={'userId 2'} userName={'Имя пользователя'} userLogin={'Длинный логин'} isAdmin={'админ'}/> -->

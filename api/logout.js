@@ -5,7 +5,7 @@ module.exports = async function(req, res) {
   try {
     console.log('logout from logout/api');
 
-    await logout(req, res);
+    return logout(req, res);
   } catch (error) {
     console.log('error: ', error);
   }

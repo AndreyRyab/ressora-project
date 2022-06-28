@@ -1,12 +1,16 @@
 const { signin } = require('./_controllers/users');
 
-module.exports = async function(req, res) {
+module.exports = function(req, res) {
   req.body = JSON.stringify(req.body);
   try {
     console.log('signin from signin/api');
 
-    await signin(req, res);
-  } catch (error) {
-    console.log('error: ', error);
+    /* const result = await  */return signin(req, res);
+    /* console.log('result from signin: ', result);
+    if (!result) {
+      throw new Error('Пользователь с таким логином не найден');
+    } */
+  } catch ({ message }) {
+    console.log('error from signin sf: ', message);
   }
 };
