@@ -10,6 +10,7 @@ module.exports.auth = (req, res) => {
   let payload;
   try {
     payload = jwt.verify(token, JWT_SECRET);
+    console.log('auth ok, payload: ', payload);
   } catch (err) {
     throw new Error(`Необходима авторизация cookies.jwt: ${req.cookies.jwt}`);
   }

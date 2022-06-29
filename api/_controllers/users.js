@@ -139,8 +139,7 @@ exports.deleteUser = (req, res) => {
 };
 
 exports.getCurrentUser = (req, res) => {
-  req.body = JSON.parse(req.body);
-  User.findById({ _id: req.body.userId })
+  User.findById({ _id: req.body._id })
     .then((user) => {
       if (!user) {
         throw new Error('Пользователя с таким id нет в базе');

@@ -5,7 +5,9 @@ const {
   deleteUser,
 } = require('./_controllers/users');
 
-module.exports = function(req, res) {
+const { auth } = require('./_utils/authentication');
+
+module.exports = async function(req, res) {
   if (req.method === 'DELETE') {
     try {
       console.log('deleteUser from user/api');
@@ -19,17 +21,19 @@ module.exports = function(req, res) {
   if (!req.body) {
     try {
       console.log('getAllUsers from user/api');
-      
-      return findAllUsers(req, res);
+      const user = await auth(req, res);
+      return findAllUsers({ ...req, user }, res);
     } catch (error) {
       console.log('error: ', error);
     }
-  } else if (req.body.userId) {
+  } else if (req.body.getCurrentUser) {
     try {
       console.log('getCurrentUser from user/api');
-
+      let newReq = { ...req };
       req.body = JSON.stringify(req.body);
-      return getCurrentUser(req, res);
+      const { _id } = await auth(req, res);
+      const updReq = { ...newReq, body: { _id } };
+      return getCurrentUser(updReq, res);
     } catch (error) {
       console.log('error: ', error);
     }

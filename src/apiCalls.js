@@ -1,44 +1,29 @@
 import api from './helpers/api';
 
-const apiUser = '/api/user';
-const apiSignin = '/api/signin';
-const apiLogout = '/api/logout';
-
-export const createNewUser = async (data) => {
-  try {
-    console.log('apiCalls createNewUser');
-    return api(apiUser, 'post', data);
-  } catch ({ message }) {
-    console.log(message);
-  }
-};
-
-export const deleteUser = async (data) => {
-  try {
-    console.log('apiCalls deleteUser');
-    return api(apiUser, 'delete', data);
-  } catch ({ message }) {
-    console.log(message);
-  }
-};
+const signinEndPoint = '/api/signin';
+const logoutEndPoint = '/api/logout';
+const userEndPoint = '/api/user';
 
 export const signin = (data) => {
-  return api(apiSignin, 'post', data);
+  return api(signinEndPoint, 'post', data);
 };
 
 export const logout = async (data) => {
-  return api(apiLogout, 'post', data);
+  return api(logoutEndPoint, 'post', data);
+};
+
+export const createNewUser = async (data) => {
+  return api(userEndPoint, 'post', data);
 };
 
 export const getAllUsers = async () => {
-  return api(apiUser, 'post', null);
+  return api(userEndPoint, 'post', null);
 };
 
-export const getCurrentUser = (data) => {
-  try {
-    console.log('apiCall getCurrentUser');
-    return api(apiUser, 'post', data);
-  } catch ({ message }) {
-    console.log(message);
-  }
+export const getCurrentUser = () => {
+  return api(userEndPoint, 'post', { getCurrentUser: true });
+};
+
+export const deleteUser = async (data) => {
+  return api(userEndPoint, 'delete', data);
 };

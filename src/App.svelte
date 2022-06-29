@@ -56,6 +56,7 @@
       isPending = true;
       const { data } = await signin(form.detail);
       userMessage = data.message;
+      localStorage.setItem('ressoraLoggedIn', true);
     } catch (error) {
       if (getErrorStatus(error) === 404) {
         errorMessage = NOT_FOUND_USER;
@@ -97,10 +98,10 @@
     }
   }
 
-  const getUser = async (/* { userId: '???' } */) => {
+  const getUser = async () => {
     try {
       isPending = true;
-      const { data } = await getCurrentUser({ userId: '62a7382aae887fa1bff6c41f' });
+      const { data } = await getCurrentUser();
       fetchedUser = data;
     } catch ({ message }) {
       errorMessage = message;
