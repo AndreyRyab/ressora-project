@@ -22,34 +22,16 @@ export const deleteUser = async (data) => {
   }
 };
 
-export const signin = async (data) => {
-  try {
-    console.log('apiCalls signin');
-    /* const result = */ return api(apiSignin, 'post', data);
-    /* console.log('apiCalls signin result: ', result);
-    return result; */
-  } catch ({ message }) {
-    console.log(message);
-    /* throw new Error('Error from apiCalls signin'); */
-  }
+export const signin = (data) => {
+  return api(apiSignin, 'post', data);
 };
 
 export const logout = async (data) => {
-  try {
-    console.log('apiCalls logout');
-    return api(apiLogout, 'post', data);
-  } catch ({ message }) {
-    console.log(message);
-  }
+  return api(apiLogout, 'post', data);
 };
 
 export const getAllUsers = async () => {
-  try {
-    console.log('apiCall getAllUsers');
-    return api(apiUser, 'post', null);
-  } catch ({ message }) {
-    console.log(message);
-  }
+  return api(apiUser, 'post', null);
 };
 
 export const getCurrentUser = (data) => {

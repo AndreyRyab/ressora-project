@@ -9,7 +9,8 @@ const {
   LOGIN_PASSWORD_ERR,
   JWT_ERROR,
   SERVER_ERR,
-} = require('../_errors/errors-constants');
+  SUCCESS_PASSWORD,
+} = require('../_errors/messages-constants');
 
 const cookieOptions = {
   httpOnly: true,
@@ -37,15 +38,14 @@ exports.signin = (req, res) => {
     .select('+password')
     .then((user) => {
       if (!user) {
-        throw new Error(NOT_FOUND_USER);
+        return res.status(404).send({ message: NOT_FOUND_USER });
       }
       bcrypt
       .compare(password, user.password)
       .then((matched) => {
         if (!matched) {
-          throw new Error(LOGIN_PASSWORD_ERR);
+          return res.status(401).send({ message: LOGIN_PASSWORD_ERR });
         }
-
         try {
           const token = jwt.sign(
             { _id: user._id },
@@ -65,26 +65,20 @@ exports.signin = (req, res) => {
             )
           )
           .status(200)
-          .send({ message: 'С паролем всё ок!' });
+          .send({ message: SUCCESS_PASSWORD });
         } catch(error) {
           console.log(error.message);
-          throw new Error(JWT_ERROR);
+          return res.status(400).send({ message: JWT_ERROR });
         }
       })
       .catch(({ message }) => {
-        console.log('controllers error: ', message);
-        if (message === LOGIN_PASSWORD_ERR) {
-          return res.status(401).send();
-        } else if (message === JWT_ERROR) {
-          return res.status(501).send();
-        } return res.status(500).send();
+        console.log('controllers signin error: ', message);
+        return res.status(500).send({ message: SERVER_ERR });
       });
     })
     .catch(({ message }) => {
-      console.log('controllers error: ', message);
-      if (message === NOT_FOUND_USER) {
-        return res.status(404).send();
-      } return res.status(500).send();
+      console.log('controllers signin error: ', message);
+      return res.status(500).send({ message: SERVER_ERR });
     });
 };
 

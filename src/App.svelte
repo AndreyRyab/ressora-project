@@ -3,6 +3,15 @@
   import UserForm from './UserForm.svelte';
   import UserItem from './UserItem.svelte';
 
+  import getErrorStatus from './errors/getErrorStatus';
+
+  import {
+  NOT_FOUND_USER,
+  LOGIN_PASSWORD_ERR,
+  SERVER_ERR,
+  JWT_ERROR,
+} from './errors/messages-constants';
+
   import {
     createNewUser,
     getAllUsers,
@@ -22,11 +31,18 @@
 
   let deletedUserId;
 
+  const clearMessages = () => {
+    errorMessage = '';
+    userMessage = '';
+  };
+
   const createUser = async (form) => {
     try {
+      clearMessages();
       isPending = true;
       const { data } = await createNewUser(form.detail)/* .then(newUser => createdUser = newUser) */;
       createdUser = data;
+      await getUsers();
     } catch ({ message }) {
       errorMessage = message;
     } finally {
@@ -36,11 +52,20 @@
 
   const signIn = async (form) => {
     try {
+      clearMessages();
       isPending = true;
       const { data } = await signin(form.detail);
       userMessage = data.message;
-    } catch ({ message }) {
-      errorMessage = message;
+    } catch (error) {
+      if (getErrorStatus(error) === 404) {
+        errorMessage = NOT_FOUND_USER;
+      } else if (getErrorStatus(error) === 401) {
+        errorMessage = LOGIN_PASSWORD_ERR;
+      } else if (getErrorStatus(error) === 400) {
+        errorMessage = JWT_ERROR;
+      } else {
+        errorMessage = SERVER_ERR;
+      }
     } finally {
       isPending = false;
     }
@@ -48,6 +73,7 @@
 
   const logOut = async (form) => {
     try {
+      clearMessages();
       isPending = true;
       const { data } = await logout(/* form.detail */{ userId: '62a7382aae887fa1bff6c41f' });
       userMessage = data.message;
@@ -60,6 +86,7 @@
 
   const getUsers = async () => {
     try {
+      clearMessages();
       isPending = true;
       const { data } = await getAllUsers();
       users = data;
