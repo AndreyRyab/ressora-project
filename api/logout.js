@@ -1,12 +1,7 @@
 const { logout } = require('./_controllers/users');
 
 module.exports = async function(req, res) {
+  console.log('logout from logout/api');
   req.body = JSON.stringify(req.body);
-  try {
-    console.log('logout from logout/api');
-
-    return logout(req, res);
-  } catch (error) {
-    console.log('error: ', error);
-  }
+  return logout(req, res);
 };

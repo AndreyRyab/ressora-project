@@ -10,6 +10,7 @@ const {
   JWT_ERROR,
   SERVER_ERR,
   SUCCESS_PASSWORD,
+  AUTH_ERROR,
 } = require('../_errors/messages-constants');
 
 const cookieOptions = {
@@ -83,9 +84,9 @@ exports.signin = (req, res) => {
 };
 
 exports.logout = (req, res) => {
+  console.log('logout from controllers');
   req.body = JSON.parse(req.body);
-  console.log('logout from controllers: ', req.body.userId);
-  User.findById({ _id: req.body.userId })
+  User.findById({ _id: req.body._id })
     .then((user) => {
       if (!user) {
         return res.status(404)
@@ -192,3 +193,9 @@ exports.createUser = (req, res) => {
       }
     })
 };
+
+exports.returnTemplate = (req, res) => {
+  res.status(401).send({
+    message: 'Необходима авторизация',
+  });
+}

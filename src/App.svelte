@@ -10,6 +10,7 @@
   LOGIN_PASSWORD_ERR,
   SERVER_ERR,
   JWT_ERROR,
+  AUTH_ERROR,
 } from './errors/messages-constants';
 
   import {
@@ -30,6 +31,9 @@
   let fetchedUser;
 
   let deletedUserId;
+
+  let currentUser;
+  let contextUser;
 
   const clearMessages = () => {
     errorMessage = '';
@@ -72,11 +76,16 @@
     }
   }
 
-  const logOut = async (form) => {
+  const logOut = async () => {
     try {
+      localStorage.removeItem('ressoraLoggedIn');
+      users = [];
+      const _id = contextUser._id;
+      contextUser = {};
+      currentUser = '';
       clearMessages();
       isPending = true;
-      const { data } = await logout(/* form.detail */{ userId: '62a7382aae887fa1bff6c41f' });
+      const { data } = await logout({ _id });
       userMessage = data.message;
     } catch ({ message }) {
       errorMessage = message;
@@ -91,8 +100,12 @@
       isPending = true;
       const { data } = await getAllUsers();
       users = data;
-    } catch ({ message }) {
-      errorMessage = message;
+    } catch (error) {
+      if (getErrorStatus(error) === 401) {
+        errorMessage = AUTH_ERROR;
+      } else {
+        errorMessage = SERVER_ERR;
+      }
     } finally {
       isPending = false;
     }
@@ -103,8 +116,14 @@
       isPending = true;
       const { data } = await getCurrentUser();
       fetchedUser = data;
-    } catch ({ message }) {
-      errorMessage = message;
+      contextUser = data;
+      currentUser = fetchedUser.name;
+    } catch (error) {
+      if (getErrorStatus(error) === 401) {
+        errorMessage = AUTH_ERROR;
+      } else {
+        errorMessage = SERVER_ERR;
+      }
     } finally {
       isPending = false;
     }
@@ -127,7 +146,7 @@
 </script>
 
 <main>
-  <h1>Hello Andrey!</h1>
+  <h1>Hello {currentUser}!</h1>
   
   <button class="button" on:click={getUser}>get user</button>
   <button class="button" on:click={getUsers}>вывести всех пользователей</button>

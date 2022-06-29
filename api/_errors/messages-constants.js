@@ -2,6 +2,7 @@ const NOT_FOUND_USER = 'Пользователь с таким логином н
 const LOGIN_PASSWORD_ERR = 'Неправильные логин или пароль';
 const SERVER_ERR = 'На сервере произошла ошибка';
 const JWT_ERROR = 'Проблема с jwt-токеном';
+const AUTH_ERROR = 'Необходима авторизация';
 
 const SUCCESS_PASSWORD = 'Пароль подтверждён!';
 
@@ -11,4 +12,5 @@ module.exports = {
   SERVER_ERR,
   JWT_ERROR,
   SUCCESS_PASSWORD,
+  AUTH_ERROR,
 }
