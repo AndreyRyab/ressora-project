@@ -61,6 +61,7 @@
       const { data } = await signin(form.detail);
       userMessage = data.message;
       localStorage.setItem('ressoraLoggedIn', true);
+      getUser();
     } catch (error) {
       if (getErrorStatus(error) === 404) {
         errorMessage = NOT_FOUND_USER;
@@ -81,8 +82,9 @@
       localStorage.removeItem('ressoraLoggedIn');
       users = [];
       const _id = contextUser._id;
-      contextUser = {};
-      currentUser = '';
+      contextUser = null;
+      currentUser = null;
+      fetchedUser = null;
       clearMessages();
       isPending = true;
       const { data } = await logout({ _id });
@@ -146,12 +148,14 @@
 </script>
 
 <main>
-  <h1>Hello {currentUser}!</h1>
+  <h1>Hello {currentUser || ''}!</h1>
   
   <button class="button" on:click={getUser}>get user</button>
   <button class="button" on:click={getUsers}>вывести всех пользователей</button>
+  {#if contextUser }
   <button class="button" on:click={logOut}>logOut</button>
-  
+  {/if}
+
   <section class="results">
     <!-- <p>errorMessage: {errorMessage}</p> -->
     {#if userMessage }

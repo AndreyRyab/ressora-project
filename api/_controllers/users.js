@@ -196,6 +196,6 @@ exports.createUser = (req, res) => {
 
 exports.returnTemplate = (req, res) => {
   res.status(401).send({
-    message: 'Необходима авторизация',
+    message: AUTH_ERROR,
   });
 }
