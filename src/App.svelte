@@ -1,9 +1,14 @@
 <script>
+  import { onMount } from 'svelte';
+  import { fly, fade } from 'svelte/transition';
+  import Router from 'svelte-spa-router';
+  import { location, push } from 'svelte-spa-router';
+
   import SigninForm from './SigninForm.svelte';
   import UserForm from './UserForm.svelte';
   import UserItem from './UserItem.svelte';
 
-  import getErrorStatus from './errors/getErrorStatus';
+  import { getErrorStatus, showErrorMessage } from './errors/error-handler';
 
   import {
   NOT_FOUND_USER,
@@ -37,6 +42,23 @@
   let currentUser;
   let contextUser;
 
+  const routeEventHandler = (data) => {
+    if ($location === '/signin') {
+      signIn(data);
+    }
+    if ($location === '/signup') {
+      createUser(data);
+    }
+  }
+
+  onMount(async () => {
+    if (localStorage.getItem('ressoraLoggedIn')) {
+      getUser();
+    } else {
+      push('/signin');
+    }
+  })
+
   const clearMessages = () => {
     errorMessage = '';
     userMessage = '';
@@ -46,15 +68,11 @@
     try {
       clearMessages();
       isPending = true;
-      const { data } = await createNewUser(form.detail)/* .then(newUser => createdUser = newUser) */;
+      const { data } = await createNewUser(form.detail);
       createdUser = data;
       await getUsers();
     } catch (error) {
-      if (getErrorStatus(error) === 409) {
-        errorMessage = CONFLICT_ERROR;
-      } else {
-        errorMessage = SERVER_ERR;
-      }
+      errorMessage = showErrorMessage(error);
     } finally {
       isPending = false;
     }
@@ -69,14 +87,12 @@
       localStorage.setItem('ressoraLoggedIn', true);
       getUser();
     } catch (error) {
-      if (getErrorStatus(error) === 404) {
-        errorMessage = NOT_FOUND_USER;
-      } else if (getErrorStatus(error) === 401) {
+      if (getErrorStatus(error) === 401) {
         errorMessage = LOGIN_PASSWORD_ERR;
       } else if (getErrorStatus(error) === 400) {
         errorMessage = JWT_ERROR;
       } else {
-        errorMessage = SERVER_ERR;
+        errorMessage = showErrorMessage(error);
       }
     } finally {
       isPending = false;
@@ -96,13 +112,8 @@
       isPending = true;
       const { data } = await logout({ _id });
       userMessage = data.message;
-    } catch ({ message }) {
-      errorMessage = message;
-      if (getErrorStatus(error) === 400) {
-        errorMessage = BAD_REQUEST;
-      } else {
-        errorMessage = SERVER_ERR;
-      }
+    } catch (error) {
+      errorMessage = showErrorMessage(error);
     } finally {
       isPending = false;
     }
@@ -115,11 +126,7 @@
       const { data } = await getAllUsers();
       users = data;
     } catch (error) {
-      if (getErrorStatus(error) === 401) {
-        errorMessage = AUTH_ERROR;
-      } else {
-        errorMessage = SERVER_ERR;
-      }
+      errorMessage = showErrorMessage(error);
     } finally {
       isPending = false;
     }
@@ -133,11 +140,7 @@
       contextUser = data;
       currentUser = fetchedUser.name;
     } catch (error) {
-      if (getErrorStatus(error) === 401) {
-        errorMessage = AUTH_ERROR;
-      } else {
-        errorMessage = SERVER_ERR;
-      }
+      errorMessage = showErrorMessage(error);
     } finally {
       isPending = false;
     }
@@ -150,43 +153,64 @@
       const { data } = await deleteUser({ userId: deletedUserId });
       users = users.filter((user) => user._id !== data._id)
       deletedUserId = data._id;
-    } catch ({ message }) {
-      errorMessage = message;
+    } catch (error) {
+      errorMessage = showErrorMessage(error);
     } finally {
       isPending = false;
     }
-  }
+  };
 
 </script>
 
+<header class="header">
+  <div class="header__nav-wrapper">
+    <nav>
+      {#if !contextUser && $location !== '/signin' }
+        <a href="/#/signin" class="header__nav-link">Войти</a>
+      {/if}
+      {#if $location !== '/signup' }
+        <a href="/#/signup" class="header__nav-link">Создать пользователя</a>
+      {/if}
+    </nav>
+    {#if contextUser }
+      <a href="/" class="header__nav-link" on:click|preventDefault={logOut}>Выйти</a>
+    {/if}
+  </div>
+</header>
+
 <main>
+  <Router
+    routes={{
+      '/signin': SigninForm,
+      '/signup': UserForm,
+    }}
+    on:routeEvent={ routeEventHandler }
+  />
+
   <h1>Hello {currentUser || ''}!</h1>
   
   <button class="button" on:click={getUser}>get user</button>
   <button class="button" on:click={getUsers}>вывести всех пользователей</button>
-  {#if contextUser }
-  <button class="button" on:click={logOut}>logOut</button>
-  {/if}
-
+  
   <section class="results">
-    <!-- <p>errorMessage: {errorMessage}</p> -->
     {#if userMessage }
-    userMessage: { userMessage }
+      userMessage: { userMessage }
     {/if}
+
     {#if isPending }
       Loading...
     {/if}
+
     {#if errorMessage}
       errorMessage: { errorMessage }
     {:else}
       'No errors'
     {/if}
-    <!-- <UserItem on:deleteUser={deleteCheckedUser} userId={'userId 1'} userName={'Имя пользователя'} userLogin={'Длинный логин'} isAdmin={'админ'}/>
-    <UserItem on:deleteUser={deleteCheckedUser} userId={'userId 2'} userName={'Имя пользователя'} userLogin={'Длинный логин'} isAdmin={'админ'}/> -->
+
     {#if users.length}
       <ul class="user-list">
         {#each users as user (user._id)}
-        <li>
+        <li in:fly="{{ y: 50, duration: 500 }}" out:fade>
           <UserItem
             userId={user._id}
             userName={user.name}
@@ -198,24 +222,30 @@
         {/each}
       </ul>
     {/if}
+
     {#if fetchedUser }
     <p class="fetched-user">fetchedUser: { JSON.stringify(fetchedUser) }</p>
     {/if}
+
     {#if form }
-    Form: { JSON.stringify(form) }
+      Form: { JSON.stringify(form) }
     {/if}
+
     {#if createdUser }
-    createdUser: { JSON.stringify(createdUser) }
+      createdUser: { JSON.stringify(createdUser) }
     {/if}
-  </section>
-  <section class="forms">
-    <UserForm on:submitCreateUser={ createUser } />
-    <SigninForm on:submitSignin={ signIn } />
   </section>
 
 </main>
 
 <style>
+  .header {
+    display: flex;
+    justify-content: flex-end;
+    max-width: 1280px;
+    padding: 12px 32px;
+  }
+
 	main {
     display: flex;
     flex-direction: column;
@@ -240,6 +270,16 @@
     list-style: none;
   }
 
+  .header__nav-wrapper {
+    align-self: flex-end;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .header__nav-link {
+    margin: 0 12px 0 0;
+  }
+
   .button {
     margin-top: 24px;
     padding: 12px;
@@ -257,11 +297,6 @@
   .fetched-user {
     width: 70%;
     word-break: break-word;
-  }
-  .forms {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-around;
   }
 
 	@media (min-width: 640px) {

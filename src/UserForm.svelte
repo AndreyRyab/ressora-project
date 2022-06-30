@@ -4,7 +4,10 @@
   const dispatch = createEventDispatcher();
 
   const createUser = (event) => {
-    dispatch('submitCreateUser', Object.fromEntries((new FormData(event.target)).entries()))
+    dispatch(
+      'routeEvent',
+      Object.fromEntries((new FormData(event.target)).entries()),
+    )
   };
 
   // TO DO
@@ -44,6 +47,7 @@
     display: flex;
     flex-direction: column;
     width: 35%;
+    min-width: 280px;
     margin: 50px 0;
     padding: 32px;
     background-color: beige;

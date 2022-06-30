@@ -4,7 +4,10 @@
   const dispatch = createEventDispatcher();
 
   const signin = (event) => {
-    dispatch('submitSignin', Object.fromEntries((new FormData(event.target)).entries()))
+    dispatch(
+      'routeEvent',
+      Object.fromEntries((new FormData(event.target)).entries()),
+    )
   };
 
 </script>
@@ -28,6 +31,7 @@
     display: flex;
     flex-direction: column;
     width: 30%;
+    min-width: 280px;
     margin: 50px 0;
     padding: 32px;
     background-color: beige;
