@@ -11,6 +11,10 @@ const {
   SERVER_ERR,
   SUCCESS_PASSWORD,
   AUTH_ERROR,
+  CONFLICT_ERROR,
+  BAD_REQUEST,
+  SUCCESS_LOGOUT,
+  REMOVAL_FAILED,
 } = require('../_errors/messages-constants');
 
 const cookieOptions = {
@@ -89,8 +93,7 @@ exports.logout = (req, res) => {
   User.findById({ _id: req.body._id })
     .then((user) => {
       if (!user) {
-        return res.status(404)
-          .send({ message: 'Пользователь не найден' })
+        return res.status(404).send({ message: NOT_FOUND_USER });
       }
       try {
         return res
@@ -98,14 +101,14 @@ exports.logout = (req, res) => {
             maxAge: 0,
             ...cookieOptions,
           }))
-          .send({ message: 'Вы успешно разлогинились' })
+          .send({ message: SUCCESS_LOGOUT })
           .end();
       } catch(error) {
         if (error.name === 'CastError') {
-          throw new Error('Переданы некорректные данные');
+          return res.status(400).send({ message: BAD_REQUEST });
         }
         console.log(error.message);
-        res.status(500).send({ message: 'Проблема с jwt-токеном'})
+        res.status(500).send({ message: JWT_ERROR})
       }
     })
     .catch((error) => {
@@ -120,8 +123,7 @@ exports.deleteUser = (req, res) => {
     User.findOneAndDelete({ _id: req.body.userId })
       .then((user) => {
         if (!user) {
-          return res.status(404)
-            .send({ message: 'Пользователь не найден' })
+          return res.status(404).send({ message: NOT_FOUND_USER });
         }
         return res
           .send({
@@ -132,10 +134,10 @@ exports.deleteUser = (req, res) => {
       });
   } catch(error) {
     if (error.name === 'CastError') {
-      throw new Error('Переданы некорректные данные');
+      return res.status(400).send({ message: BAD_REQUEST });
     }
     console.log(error.message);
-    res.status(500).send({ message: 'Не смогли удалить пользователя, попробуйте ещё раз.'})
+    res.status(500).send({ message: REMOVAL_FAILED})
   }
 };
 
@@ -143,14 +145,14 @@ exports.getCurrentUser = (req, res) => {
   User.findById({ _id: req.body._id })
     .then((user) => {
       if (!user) {
-        throw new Error('Пользователя с таким id нет в базе');
+        return res.status(404).send({ message: NOT_FOUND_USER });
       }
       res.status(200).send(user);
     })
     .catch((err) => {
       console.log(err.message)
       if (err.name === 'CastError') {
-        throw new Error('Переданы некорректные данные');
+        return res.status(400).send({ message: BAD_REQUEST });
       }
     })
 };
@@ -158,9 +160,7 @@ exports.getCurrentUser = (req, res) => {
 exports.createUser = (req, res) => {
   req.body = JSON.parse(req.body);
   if (!req.body.login || !req.body.name || !req.body.password) {
-    return res.status(400).send({
-      message: 'Введите все параметры нового пользователя',
-    });
+    return res.status(400).send({ message: BAD_REQUEST });
   }
   bcrypt
     .hash(req.body.password, 10)
@@ -182,9 +182,7 @@ exports.createUser = (req, res) => {
     .catch((err) => {
       if (err.code === 11000) {
         return res.status(409).send({
-          message: `Пользователь с таким ${
-            Object.keys(err.keyValue)[0] === 'name' ? 'именем' : 'логином'
-          } уже есть в базе`,
+          message: CONFLICT_ERROR,
         });
       } else {
         return res.status(500).send({

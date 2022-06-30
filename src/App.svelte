@@ -11,6 +11,8 @@
   SERVER_ERR,
   JWT_ERROR,
   AUTH_ERROR,
+  CONFLICT_ERROR,
+  BAD_REQUEST,
 } from './errors/messages-constants';
 
   import {
@@ -47,8 +49,12 @@
       const { data } = await createNewUser(form.detail)/* .then(newUser => createdUser = newUser) */;
       createdUser = data;
       await getUsers();
-    } catch ({ message }) {
-      errorMessage = message;
+    } catch (error) {
+      if (getErrorStatus(error) === 409) {
+        errorMessage = CONFLICT_ERROR;
+      } else {
+        errorMessage = SERVER_ERR;
+      }
     } finally {
       isPending = false;
     }
@@ -85,12 +91,18 @@
       contextUser = null;
       currentUser = null;
       fetchedUser = null;
+      createdUser = null;
       clearMessages();
       isPending = true;
       const { data } = await logout({ _id });
       userMessage = data.message;
     } catch ({ message }) {
       errorMessage = message;
+      if (getErrorStatus(error) === 400) {
+        errorMessage = BAD_REQUEST;
+      } else {
+        errorMessage = SERVER_ERR;
+      }
     } finally {
       isPending = false;
     }
