@@ -4,6 +4,8 @@
   import Router from 'svelte-spa-router';
   import { location, push } from 'svelte-spa-router';
 
+  import { authorizedUser, allUsers } from './stores.js';
+
   import SigninForm from './SigninForm.svelte';
   import UserForm from './UserForm.svelte';
   import UserItem from './UserItem.svelte';
@@ -11,13 +13,8 @@
   import { getErrorStatus, showErrorMessage } from './errors/error-handler';
 
   import {
-  NOT_FOUND_USER,
   LOGIN_PASSWORD_ERR,
-  SERVER_ERR,
   JWT_ERROR,
-  AUTH_ERROR,
-  CONFLICT_ERROR,
-  BAD_REQUEST,
 } from './errors/messages-constants';
 
   import {
@@ -27,19 +24,26 @@
     signin,
     logout,
     deleteUser,
-  } from './apiCalls.js';
+  } from './apiCalls';
+  
+  let currentUser;
+  authorizedUser.subscribe(value => {
+		currentUser = value;
+  });
+  
+  let userList;
+  allUsers.subscribe(value => {
+		userList = value;
+	});
 
   let isPending = false;
   let errorMessage = '';
   let createdUser;
-  let users = [];
-  let form;
   let userMessage;
   let fetchedUser;
 
   let deletedUserId;
 
-  let currentUser;
   let contextUser;
 
   const routeEventHandler = (data) => {
@@ -102,10 +106,9 @@
   const logOut = async () => {
     try {
       localStorage.removeItem('ressoraLoggedIn');
-      users = [];
+      allUsers.set([]);
       const _id = contextUser._id;
-      contextUser = null;
-      currentUser = null;
+      authorizedUser.set(null);
       fetchedUser = null;
       createdUser = null;
       clearMessages();
@@ -124,7 +127,7 @@
       clearMessages();
       isPending = true;
       const { data } = await getAllUsers();
-      users = data;
+      allUsers.update(users => users = data);
     } catch (error) {
       errorMessage = showErrorMessage(error);
     } finally {
@@ -136,9 +139,7 @@
     try {
       isPending = true;
       const { data } = await getCurrentUser();
-      fetchedUser = data;
-      contextUser = data;
-      currentUser = fetchedUser.name;
+      authorizedUser.update(user => user = data);
     } catch (error) {
       errorMessage = showErrorMessage(error);
     } finally {
@@ -151,7 +152,8 @@
     try {
       isPending = true;
       const { data } = await deleteUser({ userId: deletedUserId });
-      users = users.filter((user) => user._id !== data._id)
+      allUsers.update(users => userList.filter((user) => user._id !== data._id));
+      /* users = users.filter((user) => user._id !== data._id) // */
       deletedUserId = data._id;
     } catch (error) {
       errorMessage = showErrorMessage(error);
@@ -165,14 +167,14 @@
 <header class="header">
   <div class="header__nav-wrapper">
     <nav>
-      {#if !contextUser && $location !== '/signin' }
+      {#if !currentUser.name && $location !== '/signin' }
         <a href="/#/signin" class="header__nav-link">Войти</a>
       {/if}
       {#if $location !== '/signup' }
         <a href="/#/signup" class="header__nav-link">Создать пользователя</a>
       {/if}
     </nav>
-    {#if contextUser }
+    {#if currentUser.name }
       <a href="/" class="header__nav-link" on:click|preventDefault={logOut}>Выйти</a>
     {/if}
   </div>
@@ -187,7 +189,7 @@
     on:routeEvent={ routeEventHandler }
   />
 
-  <h1>Hello {currentUser || ''}!</h1>
+  <h1>Hello {currentUser.name || ''}!</h1>
   
   <button class="button" on:click={getUser}>get user</button>
   <button class="button" on:click={getUsers}>вывести всех пользователей</button>
@@ -207,9 +209,9 @@
       'No errors'
     {/if}
 
-    {#if users.length}
+    {#if userList.length}
       <ul class="user-list">
-        {#each users as user (user._id)}
+        {#each userList as user (user._id)}
         <li in:fly="{{ y: 50, duration: 500 }}" out:fade>
           <UserItem
             userId={user._id}
@@ -225,10 +227,6 @@
 
     {#if fetchedUser }
     <p class="fetched-user">fetchedUser: { JSON.stringify(fetchedUser) }</p>
-    {/if}
-
-    {#if form }
-      Form: { JSON.stringify(form) }
     {/if}
 
     {#if createdUser }
