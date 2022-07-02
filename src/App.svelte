@@ -58,6 +58,7 @@
   onMount(async () => {
     if (localStorage.getItem('ressoraLoggedIn')) {
       getUser();
+      /* push($location); */
     } else {
       push('/signin');
     }
@@ -68,11 +69,11 @@
     userMessage = '';
   };
 
-  const createUser = async (form) => {
+  const createUser = async (params) => {
     try {
       clearMessages();
       isPending = true;
-      const { data } = await createNewUser(form.detail);
+      const { data } = await createNewUser(params.detail);
       createdUser = data;
       await getUsers();
     } catch (error) {
@@ -82,11 +83,11 @@
     }
   }
 
-  const signIn = async (form) => {
+  const signIn = async (params) => {
     try {
       clearMessages();
       isPending = true;
-      const { data } = await signin(form.detail);
+      const { data } = await signin(params.detail);
       userMessage = data.message;
       localStorage.setItem('ressoraLoggedIn', true);
       getUser();
@@ -108,7 +109,12 @@
       localStorage.removeItem('ressoraLoggedIn');
       allUsers.set([]);
       const _id = contextUser._id;
-      authorizedUser.set(null);
+      authorizedUser.set({
+        _id: '',
+        name: '',
+        login: '',
+        admin: null,
+      });
       fetchedUser = null;
       createdUser = null;
       clearMessages();
@@ -153,7 +159,6 @@
       isPending = true;
       const { data } = await deleteUser({ userId: deletedUserId });
       allUsers.update(users => userList.filter((user) => user._id !== data._id));
-      /* users = users.filter((user) => user._id !== data._id) // */
       deletedUserId = data._id;
     } catch (error) {
       errorMessage = showErrorMessage(error);
@@ -189,9 +194,10 @@
     on:routeEvent={ routeEventHandler }
   />
 
-  <h1>Hello {currentUser.name || ''}!</h1>
-  
-  <button class="button" on:click={getUser}>get user</button>
+  {#if currentUser.name }
+    <h1>Hello {currentUser.name || ''}!</h1>
+  {/if}
+
   <button class="button" on:click={getUsers}>вывести всех пользователей</button>
   
   <section class="results">
