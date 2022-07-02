@@ -1,13 +1,24 @@
 <script>
+  import { isPending } from './stores.js';
   import { createEventDispatcher } from 'svelte';
 
   const dispatch = createEventDispatcher();
 
+  let login = '';
+  let password = '';
+
+  const clearInputs = () => {
+    login = '';
+    password = '';
+  }
+
   const signin = (event) => {
+    clearInputs();
+    
     dispatch(
       'routeEvent',
       Object.fromEntries((new FormData(event.target)).entries()),
-    )
+    );
   };
 
 </script>
@@ -17,12 +28,12 @@
     <form class="signin-form__form" on:submit|preventDefault={signin}>
       <label class="signin-form__label" for="login">Логин:</label>
       <!-- svelte-ignore a11y-autofocus -->
-      <input type="text" name="login" minlength="4" required autofocus>
+      <input type="text" name="login" bind:value={login} minlength="4" required autofocus>
 
       <label class="signin-form__label" for="password">Пароль:</label>
-      <input type="password" name="password" minlength="5" required>
+      <input type="password" name="password" bind:value={password} minlength="5" required>
 
-      <input type="submit" class="button" value="Войти">
+      <input disabled={$isPending} type="submit" class="button" value="Войти">
     </form>
   </section>
 

@@ -908,6 +908,11 @@
   "resolved" "https://registry.npmjs.org/supports-preserve-symlinks-flag/-/supports-preserve-symlinks-flag-1.0.0.tgz"
   "version" "1.0.0"
 
+"svelte-loading-spinners@^0.1.7":
+  "integrity" "sha512-EKCId1DjVL2RSUVJJsvtNcqQHox03XIgh4xh/4p7r6ST7d8mut6INY9/LqK4A17PFU64+3quZmqiSfOlf480CA=="
+  "resolved" "https://registry.npmjs.org/svelte-loading-spinners/-/svelte-loading-spinners-0.1.7.tgz"
+  "version" "0.1.7"
+
 "svelte-spa-router@^3.2.0":
   "integrity" "sha512-igemo5Vs82TGBBw+DjWt6qKameXYzNs6aDXcTxou5XbEvOjiRcAM6MLkdVRCatn6u8r42dE99bt/br7T4qe/AQ=="
   "resolved" "https://registry.npmjs.org/svelte-spa-router/-/svelte-spa-router-3.2.0.tgz"

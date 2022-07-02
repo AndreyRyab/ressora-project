@@ -8,3 +8,5 @@ export const currentUser = writable({
 });
 
 export const userList = writable([]);
+
+export const isPending = writable(false);
