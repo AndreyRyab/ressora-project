@@ -1,10 +1,10 @@
 <script>
+  import { currentUser, userList } from './stores.js';
   import { onMount } from 'svelte';
   import { fly, fade } from 'svelte/transition';
   import Router from 'svelte-spa-router';
   import { location, push } from 'svelte-spa-router';
 
-  import { authorizedUser, allUsers } from './stores.js';
 
   import SigninForm from './SigninForm.svelte';
   import UserForm from './UserForm.svelte';
@@ -25,26 +25,12 @@
     logout,
     deleteUser,
   } from './apiCalls';
-  
-  let currentUser;
-  authorizedUser.subscribe(value => {
-		currentUser = value;
-  });
-  
-  let userList;
-  allUsers.subscribe(value => {
-		userList = value;
-	});
 
   let isPending = false;
   let errorMessage = '';
-  let createdUser;
   let userMessage;
-  let fetchedUser;
 
   let deletedUserId;
-
-  let contextUser;
 
   const routeEventHandler = (data) => {
     if ($location === '/signin') {
@@ -58,24 +44,16 @@
   onMount(async () => {
     if (localStorage.getItem('ressoraLoggedIn')) {
       getUser();
-      /* push($location); */
     } else {
       push('/signin');
     }
   })
 
-  const clearMessages = () => {
-    errorMessage = '';
-    userMessage = '';
-  };
-
   const createUser = async (params) => {
     try {
-      clearMessages();
       isPending = true;
-      const { data } = await createNewUser(params.detail);
-      createdUser = data;
-      await getUsers();
+      await createNewUser(params.detail);
+      getUsers();
     } catch (error) {
       errorMessage = showErrorMessage(error);
     } finally {
@@ -85,7 +63,6 @@
 
   const signIn = async (params) => {
     try {
-      clearMessages();
       isPending = true;
       const { data } = await signin(params.detail);
       userMessage = data.message;
@@ -106,19 +83,19 @@
 
   const logOut = async () => {
     try {
+      push('/');
+      isPending = true;
+      const _id = $currentUser._id;
       localStorage.removeItem('ressoraLoggedIn');
-      allUsers.set([]);
-      const _id = contextUser._id;
-      authorizedUser.set({
+      currentUser.set({
         _id: '',
         name: '',
         login: '',
         admin: null,
       });
+      userList.set([]);
       fetchedUser = null;
       createdUser = null;
-      clearMessages();
-      isPending = true;
       const { data } = await logout({ _id });
       userMessage = data.message;
     } catch (error) {
@@ -130,10 +107,9 @@
 
   const getUsers = async () => {
     try {
-      clearMessages();
       isPending = true;
       const { data } = await getAllUsers();
-      allUsers.update(users => users = data);
+      userList.update(users => users = data);
     } catch (error) {
       errorMessage = showErrorMessage(error);
     } finally {
@@ -145,7 +121,7 @@
     try {
       isPending = true;
       const { data } = await getCurrentUser();
-      authorizedUser.update(user => user = data);
+      currentUser.update(user => user = data);
     } catch (error) {
       errorMessage = showErrorMessage(error);
     } finally {
@@ -158,7 +134,7 @@
     try {
       isPending = true;
       const { data } = await deleteUser({ userId: deletedUserId });
-      allUsers.update(users => userList.filter((user) => user._id !== data._id));
+      userList.update(users => $userList.filter((user) => user._id !== data._id));
       deletedUserId = data._id;
     } catch (error) {
       errorMessage = showErrorMessage(error);
@@ -172,14 +148,14 @@
 <header class="header">
   <div class="header__nav-wrapper">
     <nav>
-      {#if !currentUser.name && $location !== '/signin' }
+      {#if !$currentUser.name && $location !== '/signin' }
         <a href="/#/signin" class="header__nav-link">Войти</a>
       {/if}
       {#if $location !== '/signup' }
         <a href="/#/signup" class="header__nav-link">Создать пользователя</a>
       {/if}
     </nav>
-    {#if currentUser.name }
+    {#if $currentUser.name }
       <a href="/" class="header__nav-link" on:click|preventDefault={logOut}>Выйти</a>
     {/if}
   </div>
@@ -194,8 +170,8 @@
     on:routeEvent={ routeEventHandler }
   />
 
-  {#if currentUser.name }
-    <h1>Hello {currentUser.name || ''}!</h1>
+  {#if $currentUser.name }
+    <h1>Hello {$currentUser.name || ''}!</h1>
   {/if}
 
   <button class="button" on:click={getUsers}>вывести всех пользователей</button>
@@ -215,9 +191,9 @@
       'No errors'
     {/if}
 
-    {#if userList.length}
+    {#if $userList.length}
       <ul class="user-list">
-        {#each userList as user (user._id)}
+        {#each $userList as user (user._id)}
         <li in:fly="{{ y: 50, duration: 500 }}" out:fade>
           <UserItem
             userId={user._id}
@@ -230,16 +206,7 @@
         {/each}
       </ul>
     {/if}
-
-    {#if fetchedUser }
-    <p class="fetched-user">fetchedUser: { JSON.stringify(fetchedUser) }</p>
-    {/if}
-
-    {#if createdUser }
-      createdUser: { JSON.stringify(createdUser) }
-    {/if}
   </section>
-
 </main>
 
 <style>
