@@ -1,6 +1,7 @@
 <script>
-  import { isPending, currentUser } from './stores.js';
+  import { isPending, currentUser } from '../stores.js';
   import { createEventDispatcher } from 'svelte';
+  import { fade } from 'svelte/transition';
 
   const dispatch = createEventDispatcher();
 
@@ -16,7 +17,7 @@
 
   const createUser = (event) => {
     dispatch(
-      'routeEvent',
+      'createUser',
       Object.fromEntries((new FormData(event.target)).entries()),
     )
     clearInputs();
@@ -29,71 +30,73 @@
 
 </script>
 
-<section class="user-form">
-  <h2 class="user-form__title">Создать пользователя</h2>
-  <form class="user-form__form" on:submit|preventDefault={ createUser }>
-    <label class="user-form__label" for="name">Введите имя (минимум 2 символа):</label>
+<section class="signup-form" in:fade="{{duration: 500}}">
+  <h2 class="signup-form__title">Создать пользователя</h2>
+  <form class="signup-form__form" on:submit|preventDefault={ createUser }>
+    <label class="signup-form__label" for="name">Введите имя (минимум 2 символа):</label>
     <!-- svelte-ignore a11y-autofocus -->
     <input type="text" name="name" bind:value={name} minlength="2" required autofocus>
 
-    <label class="user-form__label" for="login">Введите логин (минимум 4 символа):</label>
+    <label class="signup-form__label" for="login">Введите логин (минимум 4 символа):</label>
     <input type="text" name="login" bind:value={login} minlength="4" required>
 
-    <label class="user-form__label" for="password">Введите пароль (минимум 5 символов, используйте буквы и цифры):</label>
+    <label class="signup-form__label" for="password">Введите пароль (минимум 5 символов, используйте буквы и цифры):</label>
     <input type="password" name="password" bind:value={password} minlength="5" required>
 
     {#if $currentUser.admin}
-      <fieldset class="user-form__radio-fieldset">
+      <fieldset class="signup-form__radio-fieldset">
         <input type="checkbox" name="admin">
-        <label for="admin" class="user-form__radio-label">
+        <label for="admin" class="signup-form__radio-label">
           Включить права администратора (сможет создавать новых пользователей и изменять их данные)
         </label>
       </fieldset>
     {/if}
 
-    <input disabled={$isPending} type="submit" value="Создать" class="button">
-    <input type="reset" value="Очистить все поля">
+    <input disabled={$isPending} type="submit" value="Создать" class="button button_accent">
+    <input type="reset" value="Очистить все поля" class="button">
   </form>
 </section>
 
 <style>
-  .user-form {
-    display: flex;
-    flex-direction: column;
-    width: 35%;
+  .signup-form {
+    margin: 0;
     min-width: 280px;
-    margin: 50px 0;
     padding: 32px;
-    background-color: beige;
   }
 
   .button {
     margin-top: 10px;
+    border: none;
+    padding: 12px 0;
   }
 
-  .user-form__label {
+  .button_accent {
+    background-color: #ff6969;
+  }
+
+  .signup-form__label {
     margin: 8px 0 5px;
     text-align: left;
     font-size: 10px;
   }
   
-  .user-form__title {
-    margin-top: 0;
+  .signup-form__title {
+    margin: 0 auto 40px;
   }
 
-  .user-form__form {
+  .signup-form__form {
     display: flex;
     flex-direction: column;
   }
 
-  .user-form__radio-fieldset {
+  .signup-form__radio-fieldset {
     display: flex;
     align-items: center;
     margin: 5px 0;
     border: none;
   }
 
-  .user-form__radio-label {
+  .signup-form__radio-label {
     margin: 0 7px;
     text-align: left;
     font-size: 10px;

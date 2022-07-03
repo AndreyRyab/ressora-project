@@ -1,17 +1,15 @@
 <script>
   import { currentUser, userList, isPending } from './stores.js';
   import { onMount } from 'svelte';
-  import { fly, fade } from 'svelte/transition';
   import Router from 'svelte-spa-router';
   import { location, push } from 'svelte-spa-router';
   import { RingLoader } from 'svelte-loading-spinners'
 
 
-  import SigninForm from './SigninForm.svelte';
-  import UserForm from './UserForm.svelte';
-  import UserItem from './UserItem.svelte';
-  import Users from './Users.svelte';
-  import Summaries from './Summaries.svelte';
+  import Signin from './pages/Signin.svelte';
+  import Signup from './pages/Signup.svelte';
+  import Users from './pages/Users.svelte';
+  import Summaries from './pages/Summaries.svelte';
 
   import { getErrorStatus, showErrorMessage } from './errors/error-handler';
 
@@ -31,26 +29,26 @@
 
   let errorMessage = '';
   let userMessage;
-
-  let deletedUserId;
+  let loggedIn = false;
 
   const routeEventHandler = (data) => {
-    if ($location === '/signin') {
+    if (data.detail.method === 'signin') {
       signIn(data);
     }
-    if ($location === '/signup') {
-      createUser(data);
+    if (data.detail.method === 'getUsers') {
+      getUsers();
     }
-    if ($location === '/users') {
-      console.log('getUsers');
-      getUsers(); 
+    if (data.detail.method === 'deleteUser') {
+      deleteCheckedUser(data.detail.userId);
+    }
+    if (data.detail.method === 'createUser') {
+      createUser(data.detail);
     }
   }
 
   onMount(async () => {
     if (localStorage.getItem('ressoraLoggedIn')) {
-      getUser();
-      push('/data');
+      await getUser();
     } else {
       push('/signin');
     }
@@ -59,7 +57,10 @@
   const createUser = async (params) => {
     try {
       isPending.update(p => p = true);
-      await createNewUser(params.detail);
+      await createNewUser(params);
+      if ($location !== '/users') {
+        push('/users');
+      }
       getUsers();
     } catch (error) {
       errorMessage = showErrorMessage(error);
@@ -72,6 +73,8 @@
     try {
       isPending.update(p => p = true);
       const { data } = await signin(params.detail);
+      loggedIn = true;
+      push('/data');
       userMessage = data.message;
       localStorage.setItem('ressoraLoggedIn', true);
       getUser();
@@ -90,7 +93,7 @@
 
   const logOut = async () => {
     try {
-      push('/');
+      push('/signin');
       isPending.update(p => p = true);
       const _id = $currentUser._id;
       localStorage.removeItem('ressoraLoggedIn');
@@ -101,9 +104,8 @@
         admin: null,
       });
       userList.set([]);
-      fetchedUser = null;
-      createdUser = null;
       const { data } = await logout({ _id });
+      loggedIn = false;
       userMessage = data.message;
     } catch (error) {
       errorMessage = showErrorMessage(error);
@@ -136,11 +138,10 @@
     }
   };
 
-  const deleteCheckedUser = async (event) => {
-    deletedUserId = event.detail.userId;
+  const deleteCheckedUser = async (userId) => {
     try {
       isPending.update(p => p = true);
-      const { data } = await deleteUser({ userId: deletedUserId });
+      const { data } = await deleteUser({ userId });
       userList.update(users => $userList.filter((user) => user._id !== data._id));
       deletedUserId = data._id;
     } catch (error) {
@@ -152,61 +153,61 @@
 
 </script>
 
-<header class="header">
-  <a href="/" class="header__logo">ressora</a>
-  <div class="header__nav-wrapper">
-    <nav>
-      {#if $currentUser._id && $location !== '/data' }
-        <a href="/#/data" class="header__nav-link">Сводка</a>
-      {/if}
-      
-      {#if $currentUser._id && $location !== '/users' }
-        <a href="/#/users" class="header__nav-link">Пользователи</a>
-      {/if}
-      
-      {#if $location !== '/signup' }
-      <a href="/#/signup" class="header__nav-link">{$currentUser._id ? 'Создать пользователя' : 'Зарегистрироваться'}</a>
-      {/if}
+<body>
+  <header class="header">
+    <a href="/" class="header__logo">ressora</a>
 
-      {#if !$currentUser.name && $location !== '/signin' }
-        <a href="/#/signin" class="header__nav-link">Войти</a>
-      {/if}
-    </nav>
-    {#if $currentUser.name }
-      <a href="/" class="header__nav-link" on:click|preventDefault={logOut}>Выйти</a>
-    {/if}
-    {#if $currentUser.name }
+    <div class="header__nav-wrapper">
+      <nav>
+        {#if $currentUser._id && $location !== '/data' }
+          <a href="/#/data" class="header__nav-link">Сводка</a>
+        {/if}
+        
+        {#if $currentUser._id && $location !== '/users' }
+          <a href="/#/users" class="header__nav-link">Пользователи</a>
+        {/if}
+
+        {#if /* !$currentUser._id &&  */!loggedIn && $location !== '/signin' }
+          <a href="/#/signin" class="header__nav-link">Войти</a>
+        {/if}
+      </nav>
+
+      {#if $currentUser.name }
       <p class="header__user-name">{$currentUser.name || ''}</p>
-      <span class="header__user-admin">{$currentUser.admin && 'админ'}</span>
+      
+      <span class="header__user-admin">{$currentUser.admin ? 'админ' : ''}</span>
+      
+      <a href="/" class="header__nav-link" on:click|preventDefault={logOut}>Выйти</a>
+      {/if}
+    </div>
+  </header>
+
+  <main>
+    <!-- {#if userMessage }
+      userMessage: { userMessage }
     {/if}
-  </div>
-</header>
 
-<main >
-  {#if userMessage }
-    userMessage: { userMessage }
-  {/if}
+    {#if $isPending }
+      Loading...
+    {/if}
 
-  {#if $isPending }
-    Loading...
-  {/if}
+     -->
+    {#if errorMessage}
+      { errorMessage }
+    {/if}
+    
+    <Router
+      routes={{
+        '/signin': Signin,
+        '/signup': Signup,
+        '/users': Users,
+        '/data': Summaries,
+      }}
+      on:routeEvent={ routeEventHandler }
+    />
 
-  {#if errorMessage}
-    errorMessage: { errorMessage }
-  {/if}
-  
-  <Router
-    routes={{
-      '/signin': SigninForm,
-      '/signup': UserForm,
-      '/users': Users,
-      '/data': Summaries,
-    }}
-    on:routeEvent={ routeEventHandler }
-  />
-
-</main>
-
+  </main>
+</body>
 {#if $isPending}
   <div class="spinner">
     <div class="spinner__wrapper">
@@ -217,6 +218,13 @@
 
 
 <style>
+  body {
+    width: 100%;
+    max-width: 100vw;
+    margin: 0;
+    overflow: hidden;
+  }
+
   .spinner {
     position: absolute;
     display: flex;
@@ -230,13 +238,13 @@
   }
 
   .spinner__wrapper {
-    margin: 200px auto;
+    margin: 250px auto;
     font-size: 32px;
   }
+
   .header {
     display: flex;
     justify-content: space-between;
-    max-width: 1280px;
     padding: 12px 32px;
     border-bottom: 1px solid grey;
   }
@@ -246,7 +254,6 @@
     color: red;
     text-transform: uppercase;
     text-decoration: none;
-
   }
 
 	main {
@@ -267,6 +274,7 @@
 
   .header__nav-link {
     margin: 0 0 0 15px;
+    color: #07080f;
   }
 
   .header__user-name {

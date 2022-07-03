@@ -1,6 +1,7 @@
 <script>
-  import { isPending } from './stores.js';
+  import { isPending } from '../stores.js';
   import { createEventDispatcher } from 'svelte';
+  import { fade } from 'svelte/transition';
 
   const dispatch = createEventDispatcher();
 
@@ -16,14 +17,14 @@
     clearInputs();
     
     dispatch(
-      'routeEvent',
+      'signin',
       Object.fromEntries((new FormData(event.target)).entries()),
     );
   };
 
 </script>
 
-  <section class="signin-form">
+  <section class="signin-form" in:fade="{{duration: 500}}">
     <h2 class="signin-form__title">Войти</h2>
     <form class="signin-form__form" on:submit|preventDefault={signin}>
       <label class="signin-form__label" for="login">Логин:</label>
@@ -33,19 +34,14 @@
       <label class="signin-form__label" for="password">Пароль:</label>
       <input type="password" name="password" bind:value={password} minlength="5" required>
 
-      <input disabled={$isPending} type="submit" class="button" value="Войти">
+      <input disabled={$isPending} type="submit" class="button button_accent" value="Войти">
     </form>
   </section>
 
 <style>
   .signin-form {
-    display: flex;
-    flex-direction: column;
-    width: 30%;
     min-width: 280px;
-    margin: 50px 0;
     padding: 32px;
-    background-color: beige;
   }
 
   .signin-form__label{
@@ -55,7 +51,7 @@
   }
   
   .signin-form__title {
-    margin-top: 0;
+    margin: 0 auto 40px;
   }
 
   .signin-form__form {
@@ -65,5 +61,11 @@
 
   .button {
     margin-top: 10px;
+    border: none;
+    padding: 12px 0;
+  }
+
+  .button_accent {
+    background-color: #ff6969;
   }
 </style>
