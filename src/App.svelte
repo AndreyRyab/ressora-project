@@ -28,8 +28,6 @@
   } from './apiCalls';
 
   let errorMessage = '';
-  let userMessage;
-  let loggedIn = false;
 
   const routeEventHandler = (data) => {
     if (data.detail.method === 'signin') {
@@ -46,13 +44,13 @@
     }
   }
 
-  onMount(async () => {
+  /* onMount(async () => {
     if (localStorage.getItem('ressoraLoggedIn')) {
       await getUser();
     } else {
       push('/signin');
     }
-  })
+  }) */
 
   const createUser = async (params) => {
     try {
@@ -167,9 +165,9 @@
           <a href="/#/users" class="header__nav-link">Пользователи</a>
         {/if}
 
-        {#if /* !$currentUser._id &&  */!loggedIn && $location !== '/signin' }
+        <!-- {#if !loggedIn }
           <a href="/#/signin" class="header__nav-link">Войти</a>
-        {/if}
+        {/if} -->
       </nav>
 
       {#if $currentUser.name }

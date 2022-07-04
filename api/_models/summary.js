@@ -1,41 +1,36 @@
-const mongoose = require('../db');
+const mongoose = require('../_utils/db');
 
 const operationSchema = new mongoose.Schema({
   title: String,
   brief: String,
   quantity: Number,
-  fact: Boolean,
-  creator: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'user',
-    required: true,
-  },
 });
 
 const summarySchema = new mongoose.Schema({
   date: {
-    type: Date,
-    default: Date.now,
+    type: String,
     unique: true,
     required: true,
   },
-  openedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'user',
-    required: true,
+  prod_line: {
+    type: String,
+    default: 1,
   },
-  closedBy: {
+  created_by: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'user',
-    required: true,
+  },
+  updated_by: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'user',
   },
   plan:  {
-    'operations': [
+    operation_list: [
       operationSchema,
     ],
   },
   fact: {
-    'operations': [
+    operation_list: [
       operationSchema,
     ],
   },
