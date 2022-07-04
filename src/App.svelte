@@ -44,13 +44,13 @@
     }
   }
 
-  /* onMount(async () => {
+  onMount(async () => {
     if (localStorage.getItem('ressoraLoggedIn')) {
       await getUser();
     } else {
       push('/signin');
     }
-  }) */
+  })
 
   const createUser = async (params) => {
     try {
