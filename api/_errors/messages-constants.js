@@ -1,4 +1,5 @@
 const NOT_FOUND_USER = 'Пользователь не найден';
+const NOT_FOUND = 'Ресурс не найден';
 const LOGIN_PASSWORD_ERR = 'Неправильные логин или пароль';
 const SERVER_ERR = 'На сервере произошла ошибка';
 const JWT_ERROR = 'Проблема с jwt-токеном';
@@ -12,6 +13,7 @@ const SUCCESS_LOGOUT = 'Вы успешно разлогинились';
 
 module.exports = {
   NOT_FOUND_USER,
+  NOT_FOUND,
   LOGIN_PASSWORD_ERR,
   SERVER_ERR,
   JWT_ERROR,
