@@ -5,7 +5,6 @@
   import { location, push } from 'svelte-spa-router';
   import { RingLoader } from 'svelte-loading-spinners'
 
-
   import Signin from './pages/Signin.svelte';
   import Signup from './pages/Signup.svelte';
   import Users from './pages/Users.svelte';
@@ -25,24 +24,11 @@
     signin,
     logout,
     deleteUser,
+    createNewSummary,
   } from './apiCalls';
 
   let errorMessage = '';
-
-  const routeEventHandler = (data) => {
-    if (data.detail.method === 'signin') {
-      signIn(data);
-    }
-    if (data.detail.method === 'getUsers') {
-      getUsers();
-    }
-    if (data.detail.method === 'deleteUser') {
-      deleteCheckedUser(data.detail.userId);
-    }
-    if (data.detail.method === 'createUser') {
-      createUser(data.detail);
-    }
-  }
+  let loggedIn = false;
 
   onMount(async () => {
     if (localStorage.getItem('ressoraLoggedIn')) {
@@ -50,16 +36,33 @@
     } else {
       push('/signin');
     }
-  })
+  });
+
+  $: {
+    if (loggedIn) {
+      localStorage.setItem('ressoraLoggedIn', true);
+      (async () => await getUser())();
+    }
+  };
+
+  $: if ($currentUser._id) push('/data');
 
   const createUser = async (params) => {
     try {
       isPending.update(p => p = true);
       await createNewUser(params);
-      if ($location !== '/users') {
-        push('/users');
-      }
       getUsers();
+    } catch (error) {
+      errorMessage = showErrorMessage(error);
+    } finally {
+      isPending.update(p => p = false);
+    }
+  }
+
+  const createSummary = async (params) => {
+    try {
+      isPending.update(p => p = true);
+      await createNewSummary(params);
     } catch (error) {
       errorMessage = showErrorMessage(error);
     } finally {
@@ -72,10 +75,7 @@
       isPending.update(p => p = true);
       const { data } = await signin(params.detail);
       loggedIn = true;
-      push('/data');
       userMessage = data.message;
-      localStorage.setItem('ressoraLoggedIn', true);
-      getUser();
     } catch (error) {
       if (getErrorStatus(error) === 401) {
         errorMessage = LOGIN_PASSWORD_ERR;
@@ -90,20 +90,21 @@
   }
 
   const logOut = async () => {
+    isPending.update(p => p = true);
+    localStorage.removeItem('ressoraLoggedIn');
+    loggedIn = false;
+    push('/signin');
+    const _id = $currentUser._id;
+    currentUser.set({
+      _id: '',
+      name: '',
+      login: '',
+      admin: null,
+    });
+    userList.set([]);
+
     try {
-      push('/signin');
-      isPending.update(p => p = true);
-      const _id = $currentUser._id;
-      localStorage.removeItem('ressoraLoggedIn');
-      currentUser.set({
-        _id: '',
-        name: '',
-        login: '',
-        admin: null,
-      });
-      userList.set([]);
       const { data } = await logout({ _id });
-      loggedIn = false;
       userMessage = data.message;
     } catch (error) {
       errorMessage = showErrorMessage(error);
@@ -149,6 +150,24 @@
     }
   };
 
+  const routeEventHandler = (data) => {
+    if (data.detail.method === 'signin') {
+      signIn(data);
+    }
+    if (data.detail.method === 'getUsers') {
+      getUsers();
+    }
+    if (data.detail.method === 'deleteUser') {
+      deleteCheckedUser(data.detail.userId);
+    }
+    if (data.detail.method === 'createUser') {
+      createUser(data.detail);
+    }
+    if (data.detail.method === 'createSummary') {
+      createSummary(data.detail);
+    }
+  }
+
 </script>
 
 <body>
@@ -171,11 +190,11 @@
       </nav>
 
       {#if $currentUser.name }
-      <p class="header__user-name">{$currentUser.name || ''}</p>
-      
-      <span class="header__user-admin">{$currentUser.admin ? 'админ' : ''}</span>
-      
-      <a href="/" class="header__nav-link" on:click|preventDefault={logOut}>Выйти</a>
+        <p class="header__user-name">{$currentUser.name || ''}</p>
+        
+        <span class="header__user-admin">{$currentUser.admin ? 'админ' : ''}</span>
+        
+        <a href="/" class="header__nav-link" on:click|preventDefault={logOut}>Выйти</a>
       {/if}
     </div>
   </header>

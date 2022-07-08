@@ -3,6 +3,7 @@ import api from './helpers/api';
 const signinEndPoint = '/api/signin';
 const logoutEndPoint = '/api/logout';
 const userEndPoint = '/api/user';
+const summaryEndPoint = '/api/summary';
 
 export const signin = (data) => {
   return api(signinEndPoint, 'post', data);
@@ -26,4 +27,8 @@ export const getCurrentUser = () => {
 
 export const deleteUser = async (data) => {
   return api(userEndPoint, 'delete', data);
+};
+
+export const createNewSummary = async (data) => {
+  return api(summaryEndPoint, 'post', data);
 };

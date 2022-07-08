@@ -4,6 +4,7 @@ const {
   NOT_FOUND,
   CONFLICT_ERROR,
   BAD_REQUEST,
+  AUTH_ERROR,
 } = require('../_errors/messages-constants');
 
 exports.createSummary = (req, res) => {
@@ -68,7 +69,13 @@ exports.updateSummary = (req, res) => {
         });
       }
     })
-}
+};
+
+exports.returnTemplate = (req, res) => {
+  res.status(401).send({
+    message: AUTH_ERROR,
+  });
+};
 
 
 /* {
