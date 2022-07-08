@@ -32,3 +32,7 @@ export const deleteUser = async (data) => {
 export const createNewSummary = async (data) => {
   return api(summaryEndPoint, 'post', data);
 };
+
+export const updateSummary = async (data) => {
+  return api(summaryEndPoint, 'post', data);
+};

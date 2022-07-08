@@ -5,7 +5,6 @@ const {
   deleteUser,
   returnTemplate,
 } = require('./_controllers/users');
-
 const { auth } = require('./_utils/authentication');
 
 module.exports = async function(req, res) {

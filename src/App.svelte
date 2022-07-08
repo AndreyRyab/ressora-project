@@ -25,6 +25,7 @@
     logout,
     deleteUser,
     createNewSummary,
+    updateSummary,
   } from './apiCalls';
 
   let errorMessage = '';
@@ -165,6 +166,9 @@
     }
     if (data.detail.method === 'createSummary') {
       createSummary(data.detail);
+    }
+    if (data.detail.method === 'updateSummary') {
+      updateSummary(data.detail);
     }
   }
 

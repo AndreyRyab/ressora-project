@@ -47,6 +47,7 @@ exports.updateSummary = (req, res) => {
   console.log('contr, updateSummary');
   const { timeStamp, update } = JSON.parse(req.body);
   if (!update) {
+    console.log('!update', req.body);
     return res.status(400).send({ message: BAD_REQUEST });
   }
   Summary.findOneAndUpdate(

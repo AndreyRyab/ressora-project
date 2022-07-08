@@ -6,11 +6,21 @@
 
   import { operations } from '../data';
 
+  let isCreated = true;
+  let isUpdated = false;
   let form = [...operations];
+
+  let currentSummary = {
+    data: '2022-07-08T22:13:20+03:00',
+  }
 
   const dispatch = createEventDispatcher();
 
-  const createSummary = (planOrFact) => {
+  const handleSummary = () => {
+    isCreated ? updateSummary() : createSummary();
+  }
+
+  const createSummary = () => {
     let summary = {
       date: moment().format(),
       prod_line: 1,
@@ -32,21 +42,38 @@
       },
     };
 
-    summary[planOrFact].operation_list = [...form];
+    summary.plan.operation_list = [...form];
+
+    console.log(summary);
 
     dispatch('routeEvent', { ...summary, method: 'createSummary' });
+  }
+
+  const updateSummary = () => {
+    const update = {
+      update: {
+        updated_by: $currentUser._id,
+        fact: {
+          operation_list: [...form],
+        },
+      }
+    };
+
+    dispatch('routeEvent', { ...update, timeStamp: currentSummary.data, method: 'updateSummary' });
   }
 
 </script>
 
 <section class="summaries" in:fade="{{duration: 500}}">
-  sfedsf {$currentUser._id}
   <ul>
     {#each form as input (input.brief)}
-      <li>{input.title}<input type="number" bind:value={input.quantity} min=0 max=100></li>
+      <li>
+        {input.title}
+        <input disabled={$isPending} type="number" bind:value={input.quantity} min=0 max=100>
+      </li>
     {/each}
   </ul>
-  <button on:click|preventDefault={createSummary}>Создать</button>
+  <button disabled={$isPending} on:click|preventDefault={handleSummary}>{isCreated ? 'Обновить' : 'Создать'}</button>
 </section>
 
 <style>

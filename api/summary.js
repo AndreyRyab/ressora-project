@@ -1,4 +1,5 @@
 const { createSummary, updateSummary } = require('./_controllers/summaries');
+const { auth } = require('./_utils/authentication');
 
 module.exports = async function(req, res) {
   const authRes = await auth({ ...req }, res);
@@ -8,8 +9,10 @@ module.exports = async function(req, res) {
     return returnTemplate(req, res);
   }
 
-  console.log(req.body);
-  if (req.body.update) {
+  /* console.log(JSON.stringify(req.body)); */
+  /* req.body = JSON.stringify(req.body); */
+
+  if (req.body.method === 'updateSummary') {
     console.log('updateSummary from summary/api');
     req.body = JSON.stringify(req.body);
     return updateSummary(req, res);
