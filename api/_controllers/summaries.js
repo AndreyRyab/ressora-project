@@ -2,7 +2,7 @@ const Summary = require('../_models/summary');
 
 const {
   NOT_FOUND,
-  CONFLICT_ERROR,
+  CONFLICT_SUMMARY_ERROR,
   BAD_REQUEST,
   AUTH_ERROR,
 } = require('../_errors/messages-constants');
@@ -33,7 +33,7 @@ exports.createSummary = (req, res) => {
     .catch((err) => {
       if (err.code === 11000) {
         return res.status(409).send({
-          message: CONFLICT_ERROR,
+          message: CONFLICT_SUMMARY_ERROR,
         });
       } else {
         return res.status(500).send({
@@ -70,6 +70,44 @@ exports.updateSummary = (req, res) => {
         });
       }
     })
+};
+
+exports.getSummary = (req, res) => {
+  req.body = JSON.parse(req.body);
+  try {
+    if (req.body.method === 'getCurrentSummary') {
+      console.log('contr, getCurrentSummary');
+      Summary.findOne({ date: req.body.start })
+        .then((summary) => {
+          if (!summary) {
+            return res.status(404).send({ message: NOT_FOUND });
+          }
+          return res.status(200).send([summary])
+        });
+      return;
+    }
+    console.log('contr, getCertainSummaries');
+    Summary.find({
+      date: {
+        $gte: req.body.start,
+        $lte: req.body.end,
+      },
+    })
+      .then((summary) => {
+        if (!summary) {
+          return res.status(404).send({ message: NOT_FOUND });
+        }
+        return res.status(200).send(summary);
+      });
+  } catch (err) {
+    console.log(err.message)
+    if (err.name === 'CastError') {
+      return res.status(400).send({ message: BAD_REQUEST });
+    }
+    return res.status(500).send({
+      message: `Ошибка на сервере: ${err.message}`,
+    });
+  }
 };
 
 exports.returnTemplate = (req, res) => {

@@ -5,6 +5,7 @@ const SERVER_ERR = 'На сервере произошла ошибка';
 const JWT_ERROR = 'Проблема с jwt-токеном';
 const AUTH_ERROR = 'Необходима авторизация';
 const CONFLICT_ERROR = 'Пользователь с такими параметрами уже есть в базе данных';
+const CONFLICT_SUMMARY_ERROR = 'Объект с такой датой уже есть в базе данных';
 const BAD_REQUEST = 'Переданы некорректные или неполные данные';
 const REMOVAL_FAILED = 'Не смогли удалить пользователя, попробуйте ещё раз.';
 
@@ -20,6 +21,7 @@ module.exports = {
   SUCCESS_PASSWORD,
   AUTH_ERROR,
   CONFLICT_ERROR,
+  CONFLICT_SUMMARY_ERROR,
   BAD_REQUEST,
   SUCCESS_LOGOUT,
   REMOVAL_FAILED,

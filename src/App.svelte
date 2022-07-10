@@ -1,5 +1,11 @@
 <script>
-  import { currentUser, userList, isPending } from './stores.js';
+  import {
+    currentUser,
+    userList,
+    isPending,
+    currentSummary,
+    fetchedSummaryList,
+  } from './stores.js';
   import { onMount } from 'svelte';
   import Router from 'svelte-spa-router';
   import { location, push } from 'svelte-spa-router';
@@ -26,18 +32,19 @@
     deleteUser,
     createNewSummary,
     updateSummary,
+    getSummary,
   } from './apiCalls';
 
   let errorMessage = '';
   let loggedIn = false;
 
-  onMount(async () => {
+  /* onMount(async () => {
     if (localStorage.getItem('ressoraLoggedIn')) {
       await getUser();
     } else {
       push('/signin');
     }
-  });
+  }); */
 
   $: {
     if (loggedIn) {
@@ -58,18 +65,7 @@
     } finally {
       isPending.update(p => p = false);
     }
-  }
-
-  const createSummary = async (params) => {
-    try {
-      isPending.update(p => p = true);
-      await createNewSummary(params);
-    } catch (error) {
-      errorMessage = showErrorMessage(error);
-    } finally {
-      isPending.update(p => p = false);
-    }
-  }
+  };
 
   const signIn = async (params) => {
     try {
@@ -88,7 +84,7 @@
     } finally {
       isPending.update(p => p = false);
     }
-  }
+  };
 
   const logOut = async () => {
     isPending.update(p => p = true);
@@ -112,7 +108,7 @@
     } finally {
       isPending.update(p => p = false);
     }
-  }
+  };
 
   const getUsers = async () => {
     try {
@@ -124,7 +120,7 @@
     } finally {
       isPending.update(p => p = false);
     }
-  }
+  };
 
   const getUser = async () => {
     try {
@@ -151,6 +147,54 @@
     }
   };
 
+  const getCurrentSummary = async (params) => {
+    try {
+      isPending.update(p => p = true);
+      const { data } = await getSummary(params);
+      currentSummary.update(summary => summary = data[0]);
+    } catch (error) {
+      errorMessage = showErrorMessage(error);
+    } finally {
+      isPending.update(p => p = false);
+    }
+  };
+
+  const getCertainSummaries = async (params) => {
+    try {
+      isPending.update(p => p = true);
+      const { data } = await getSummary(params);
+      fetchedSummaryList.update(summaryList => summaryList = data);
+    } catch (error) {
+      errorMessage = showErrorMessage(error);
+    } finally {
+      isPending.update(p => p = false);
+    }
+  };
+
+  const createSummary = async (params) => {
+    try {
+      isPending.update(p => p = true);
+      const { data } = await createNewSummary(params);
+      currentSummary.update(summary => summary = data);
+    } catch (error) {
+      errorMessage = showErrorMessage(error);
+    } finally {
+      isPending.update(p => p = false);
+    }
+  };
+
+  const updateCurrentSummary = async (params) => {
+    try {
+      isPending.update(p => p = true);
+      const { data } = await updateSummary(params);
+      currentSummary.update(summary => summary = data);
+    } catch (error) {
+      errorMessage = showErrorMessage(error);
+    } finally {
+      isPending.update(p => p = false);
+    }
+  };
+
   const routeEventHandler = (data) => {
     if (data.detail.method === 'signin') {
       signIn(data);
@@ -168,7 +212,13 @@
       createSummary(data.detail);
     }
     if (data.detail.method === 'updateSummary') {
-      updateSummary(data.detail);
+      updateCurrentSummary(data.detail);
+    }
+    if (data.detail.method === 'getCurrentSummary') {
+      getCurrentSummary(data.detail);
+    }
+    if (data.detail.method === 'getCertainSummaries') {
+      getCertainSummaries(data.detail);
     }
   }
 

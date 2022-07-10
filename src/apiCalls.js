@@ -34,5 +34,9 @@ export const createNewSummary = async (data) => {
 };
 
 export const updateSummary = async (data) => {
+  return api(summaryEndPoint, 'put', data);
+};
+
+export const getSummary = async (data) => {
   return api(summaryEndPoint, 'post', data);
 };
