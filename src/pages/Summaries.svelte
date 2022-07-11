@@ -4,11 +4,28 @@
   import { createEventDispatcher } from 'svelte';
   import { fade } from 'svelte/transition';
 
+  import Chart from '../components/Chart.svelte';
+
   import { operations } from '../data';
 
   let isCreated = false;
   let isUpdated = false;
   let form = [...operations];
+
+  let chartData;
+
+  $: {
+    chartData = form.reduce((acc, item) => {
+      acc.plan.push(item.quantity);
+      acc.title.push(item.title);
+      return acc;
+    }, {
+      plan: [NaN],
+      title: [''],
+    });
+    chartData.plan.push(NaN);
+    chartData.title.push('');
+  };
 
   const dispatch = createEventDispatcher();
 
@@ -77,6 +94,7 @@
 </script>
 
 <section class="summaries" in:fade="{{duration: 500}}">
+  <Chart {chartData}/>
   <ul>
     {#each $fetchedSummaryList as summary (summary.date)}
       <li>{summary.date}</li>
@@ -120,7 +138,8 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-top: 150px;
+    margin: 20px auto;
+    width: 90%;
   }
 
   /* .summaries__title {

@@ -21,3 +21,43 @@ const data = {
     }
   ]
 };
+
+
+{/* <script>
+	import chartjs from 'chart.js@2.6.0';
+	let chartData;
+	import { onMount } from 'svelte';
+
+	const datapoints1 = [NaN, 20, 10, 5, 2, 20, 30, 45, NaN];
+  const datapoints2 = [NaN,30, 40, 25, 22, 30, 50, 15, NaN];
+	let chartLabels = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', ''];
+	let ctx;
+	let chartCanvas;
+
+	onMount(async (promise) => {
+		  ctx = chartCanvas.getContext('2d');
+			const chart = new chartjs(ctx, {
+				type: 'line',
+				data: {
+						labels: chartLabels,
+						datasets: [{
+								label: 'План',
+								borderColor: 'rgb(252, 186, 3)',
+							fill: false,
+								data: datapoints1
+						},
+											{
+								label: 'Факт',
+								borderColor: 'rgb(255, 99, 132)',
+												fill: false,
+								data: datapoints2
+						}]
+				}
+		});
+
+	});
+
+</script>
+
+<canvas bind:this={chartCanvas} id="myChart"></canvas> */}
+
