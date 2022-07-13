@@ -15,6 +15,10 @@
   let chartData;
 
   $: {
+    fillChartWithInputData(form);
+  };
+
+  const fillChartWithInputData = (form) => {
     chartData = form.reduce((acc, item) => {
       acc.plan.push(item.quantity);
       acc.title.push(item.title);
@@ -25,7 +29,7 @@
     });
     chartData.plan.push(NaN);
     chartData.title.push('');
-  };
+  }
 
   const dispatch = createEventDispatcher();
 
@@ -148,3 +152,4 @@
   } */
 
 </style>
+

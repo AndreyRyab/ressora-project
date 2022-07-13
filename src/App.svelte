@@ -38,13 +38,13 @@
   let errorMessage = '';
   let loggedIn = false;
 
-  /* onMount(async () => {
+  onMount(async () => {
     if (localStorage.getItem('ressoraLoggedIn')) {
       await getUser();
     } else {
       push('/signin');
     }
-  }); */
+  });
 
   $: {
     if (loggedIn) {
