@@ -77,12 +77,23 @@ exports.getSummary = (req, res) => {
   try {
     if (req.body.method === 'getCurrentSummary') {
       console.log('contr, getCurrentSummary');
-      Summary.findOne({ date: req.body.start })
+      Summary.find({
+        date: {
+          $gte: req.body.period,
+          $lte: req.body.start,
+        },
+      })
         .then((summary) => {
-          if (!summary) {
+          if (!summary.length) {
             return res.status(404).send({ message: NOT_FOUND });
           }
-          return res.status(200).send([summary])
+          const result = summary.reduce((acc, item) => {
+            if (item.date > acc.date) {
+              acc = item;
+            }
+            return acc;
+          }, { date: '2000-01-01T00:00:00+03:00' });
+          return res.status(200).send(result);
         });
       return;
     }

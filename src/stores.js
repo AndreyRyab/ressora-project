@@ -22,6 +22,8 @@ export const currentSummary = writable({
   },
 });
 
+export const prevSummary = writable({});
+
 export const fetchedSummaryList = writable([]);
 
 export const userList = writable([]);

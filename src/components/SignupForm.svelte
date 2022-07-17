@@ -23,11 +23,6 @@
     clearInputs();
   };
 
-  // TO DO
-  /* const updateUser = (event) => {
-    dispatch('submitUpdateUser', Object.fromEntries((new FormData(event.target)).entries()))
-  }; */
-
 </script>
 
 <section class="signup-form" in:fade="{{duration: 500}}">
@@ -62,16 +57,6 @@
     margin: 0;
     min-width: 280px;
     padding: 32px;
-  }
-
-  .button {
-    margin-top: 10px;
-    border: none;
-    padding: 12px 0;
-  }
-
-  .button_accent {
-    background-color: #ff6969;
   }
 
   .signup-form__label {

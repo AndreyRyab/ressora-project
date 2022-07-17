@@ -1,6 +1,10 @@
 <script>
   import moment from 'moment';
-  import { currentUser, isPending, fetchedSummaryList } from '../stores';
+  import {
+    currentUser,
+    isPending,
+    fetchedSummaryList,
+  } from '../stores';
   import { createEventDispatcher } from 'svelte';
   import { fade } from 'svelte/transition';
 
@@ -16,6 +20,10 @@
 
   $: {
     fillChartWithInputData(form);
+  };
+
+  const openModal = () => {
+    isModalOpen.update(p => p = true);
   };
 
   const fillChartWithInputData = (form) => {
@@ -39,19 +47,15 @@
 
   const createSummary = () => {
     const params = {
-      date: moment().format('L'),
+      date: moment().format(),
       prod_line: 1,
       created_by: $currentUser._id,
-      updated_by: $currentUser._id,
+      updated_by: null,
       plan:  {
         operation_list: [...form],
       },
       fact: {
-        operation_list: [{
-          title: '',
-          brief: '',
-          quantity: 0,
-        }],
+        operation_list: [],
       },
       method: 'createSummary',
     }
@@ -69,7 +73,7 @@
           },
         },
       },
-      timeStamp: moment().format('L'),
+      timeStamp: moment().format(),
       method: 'updateSummary',
     }
 
@@ -77,8 +81,9 @@
   }
 
   const getCurrentSummary = () => {
+    const now = moment().format('L');
     const params = {
-      start: moment().format('L'),
+      start: moment(now).format(),
       method: 'getCurrentSummary',
     };
 
@@ -87,8 +92,8 @@
 
   const getCertainSummaries = () => {
     const params = {
-      start: '07/07/2022',
-      end: moment().format('L'),
+      start: moment('07/12/2022').format(),
+      end: moment().format(),
       method: 'getCertainSummaries',
     };
 
@@ -115,6 +120,7 @@
   <button disabled={$isPending} on:click|preventDefault={handleSummary}>{isCreated ? 'Обновить' : 'Создать'}</button>
   <button disabled={$isPending} on:click|preventDefault={getCurrentSummary}>{'Получить текущий summary'}</button>
   <button disabled={$isPending} on:click|preventDefault={getCertainSummaries}>{'Получить summaries'}</button>
+
 </section>
 
 <style>
