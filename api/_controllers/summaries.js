@@ -52,7 +52,7 @@ exports.updateSummary = (req, res) => {
   }
   Summary.findOneAndUpdate(
     timeStamp,
-    { $set: { ...update } },
+    { $set: update },
     { new: true },
     )
     .then((summary) => {
@@ -92,7 +92,7 @@ exports.getSummary = (req, res) => {
               acc = item;
             }
             return acc;
-          }, { date: '2000-01-01T00:00:00+03:00' });
+          }, { date: '01-01-2000' });
           return res.status(200).send(result);
         });
       return;

@@ -22,10 +22,10 @@ export const currentSummary = writable({
   },
 });
 
-export const prevSummary = writable({});
-
 export const fetchedSummaryList = writable([]);
 
 export const userList = writable([]);
 
 export const isPending = writable(false);
+
+export const chartData = writable({});

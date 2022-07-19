@@ -16,7 +16,7 @@
   let isUpdated = false;
   let form = [...operations];
 
-  let chartData;
+  export let chartData;
 
   $: {
     fillChartWithInputData(form);

@@ -5,8 +5,8 @@
     userList,
     isPending,
     currentSummary,
-    prevSummary,
     fetchedSummaryList,
+    chartData,
   } from './stores.js';
 
   import { onMount } from 'svelte';
@@ -42,54 +42,138 @@
   } from './apiCalls';
 
   let modal;
-  let chartData;
 
-  let isCreating = true;
+  let isSummaryExist = false;
   let summaryForm = [...operations];
 
   let errorMessage = '';
   let loggedIn = false;
 
-  const now = moment().format('L');
+  let inputChartData;
 
-  onMount(async () => {
+  const now = moment().format();
+
+  /* onMount(async () => {
     if (localStorage.getItem('ressoraLoggedIn')) {
       await getUser();
     } else {
       push('/signin');
     }
-  });
+  }); */
 
-  $: {
-    if (loggedIn) {
+  $: if (loggedIn) {
       localStorage.setItem('ressoraLoggedIn', true);
-      (async () => await getUser())();
-    }
+      getUser();
+    };
+
+  $: if ($currentUser._id) {
+    getCurrentSummary({
+      start: moment().format('DD-MM-YYYY'),
+      period: moment(now).subtract(1, 'months').format('DD-MM-YYYY'),
+      method: 'getCurrentSummary',
+    })
+    push('/data');
   };
 
-  $: if ($currentUser._id) push('/data');
-
-  $: if ($currentUser._id) (async () => await getCurrentSummary({
-    start: moment(now).format(),
-    period: moment(now).subtract(1, 'months'),
-    method: 'getCurrentSummary',
-  }))();
-
+  $: if ($currentSummary.date) createInitialChart();
+  
   $: fillChartWithInputData(summaryForm);
 
-  /* $: if (currentSummary.date) fillChartWithInputData(currentSummary); */
+  /* {
+        labels: chartData.labels,
+        datasets: [{
+          label: 'План',
+          borderWidth: 4,
+          borderColor: 'rgb(252, 186, 3)',
+          pointStyle: 'circle',
+          tension: 0.3,
+          fill: false,
+          data: chartData.plan,
+        },
+        {
+          label: 'Факт',
+          borderWidth: 4,
+          borderColor: 'rgb(255, 99, 132)',
+          pointStyle: 'circle',
+          tension: 0.3,
+          fill: false,
+          data: fact,
+        }]
+      }, */
+  const planChartStyle = {
+    label: 'План',
+    borderWidth: 4,
+    borderColor: 'rgb(252, 186, 3)',
+    pointStyle: 'circle',
+    tension: 0.3,
+    fill: false,
+  };
+
+  const factChartStyle = {
+    label: 'Факт',
+    borderWidth: 4,
+    borderColor: 'rgb(255, 99, 132)',
+    pointStyle: 'circle',
+    tension: 0.3,
+    fill: false,
+  };
+
+  const createInitialChart = () => {
+    let initialChartData = $currentSummary.plan.operation_list.reduce(
+      (acc, item) => {
+        acc.labels.push(item.title);
+        acc.datasets[0].data.push(item.quantity);
+        return acc;
+      },
+      {
+        labels: [''],
+        datasets: [
+          {
+            data: [NaN],
+            ...planChartStyle,
+          },
+        ],
+      }
+    );
+    initialChartData.labels.push('');
+    initialChartData.datasets[0].data.push(NaN);
+
+    console.log(initialChartData)
+
+    let factChartData = null;
+
+    if ($currentSummary.fact.operation_list.length) {
+      factChartData = $currentSummary.fact.operation_list.reduce(
+      (acc, item) => {
+        acc.data.push(item.quantity);
+        return acc;
+      },
+      {
+        data: [NaN],
+        ...factChartStyle,
+      },
+    );
+      factChartData.data.push(NaN);
+    };
+
+    initialChartData.datasets.push(factChartData);
+    
+    console.log(initialChartData);
+
+    chartData.update(p => p = initialChartData);
+  };
 
   const fillChartWithInputData = (summaryForm) => {
-    chartData = summaryForm.reduce((acc, item) => {
+    inputChartData = summaryForm.reduce((acc, item) => {
       acc.plan.push(item.quantity);
-      acc.title.push(item.title);
+      acc.labels.push(item.title);
       return acc;
     }, {
       plan: [NaN],
-      title: [''],
+      labels: [''],
     });
-    chartData.plan.push(NaN);
-    chartData.title.push('');
+    inputChartData.plan.push(NaN);
+    inputChartData.labels.push('');
   }
 
   const createUser = async (params) => {
@@ -187,8 +271,9 @@
   const getCurrentSummary = async (params) => {
     try {
       isPending.update(p => p = true);
-      const { lastOne } = await getSummary(params);
-      currentSummary.update(summary => summary = lastOne);
+      const { data } = await getSummary(params);
+      console.log(data);
+      currentSummary.update(summary => summary = data);
     } catch (error) {
       errorMessage = showErrorMessage(error);
     } finally {
@@ -233,12 +318,14 @@
   };
 
   const handleSummary = () => {
-    isCreating ? createSummaryObj() : updateSummaryObj();
+    $currentSummary.date === moment().format('DD-MM-YYYY')
+      ? updateSummaryObj()
+      : createSummaryObj();
   }
 
   const createSummaryObj = () => {
     const params = {
-      date: moment().format(),
+      date: moment().format('DD-MM-YYYY'),
       prod_line: 1,
       created_by: $currentUser._id,
       updated_by: null,
@@ -251,26 +338,27 @@
       method: 'createSummary',
     }
 
-    console.log(params);
+    console.log('createSummary: ', params);
 
     /* dispatch('routeEvent', params); */
+    createSummary(params);
   }
 
   const updateSummaryObj = () => {
     const params = {
       update: {
-        update: {
-          updated_by: $currentUser._id,
-          fact: {
-            operation_list: [...summaryForm],
-          },
+        updated_by: $currentUser._id,
+        fact: {
+          operation_list: [...summaryForm],
         },
       },
-      timeStamp: moment().format(),
+      timeStamp: moment().format('DD-MM-YYYY'),
       method: 'updateSummary',
     }
 
-    console.log(params);
+    console.log('updateSummary: ', params);
+
+    updateCurrentSummary(params);
 
     /* dispatch('routeEvent', params); */
   }
@@ -320,7 +408,7 @@
       </nav>
 
       {#if $currentUser.name }
-        <p class="header__user-name">{$currentUser.name || ''}</p>
+        <p class="header__user-name">{$currentUser.name || 'Неопознанный пользователь'}</p>
         
         <span class="header__user-admin">{$currentUser.admin ? 'админ' : ''}</span>
         
@@ -330,7 +418,11 @@
   </header>
 
   <main>
-    <button class="button button_accent" on:click={() => modal.show()}>Внести данные</button>
+    {#if $currentUser._id}
+      <div class="main-actions__wrapper">
+        <button class="button button_accent" on:click={() => modal.show()}>Внести данные</button>
+      </div>
+    {/if}
 
     {#if errorMessage}
       { errorMessage }
@@ -351,15 +443,15 @@
   <Modal bind:this={modal}>
     <div class="modal__data-wrapper">
       <div class="modal__chart">
-        <Chart {chartData}/>
+      <Chart {inputChartData}/>
       </div>
 
       <div class="modal__inputs">
-        <ul>
+        <!-- <ul>
           {#each $fetchedSummaryList as summary (summary.date)}
             <li>{summary.date}</li>
           {/each}
-        </ul>  
+        </ul>   -->
         <ul>
           {#each summaryForm as input (input.brief)}
             <li>
@@ -395,7 +487,7 @@
   }
 
   .spinner {
-    position: absolute;
+    position: fixed;
     display: flex;
     z-index: 10;
     top: 0;
@@ -410,6 +502,15 @@
     margin: 250px auto;
     font-size: 32px;
   }
+
+  .main-actions__wrapper {
+    display: flex;
+    justify-content: flex-end;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px 16px;
+  }
+    
 
   .header {
     display: flex;
@@ -432,7 +533,6 @@
   
   .modal__inputs {
     flex: 0 0 auto;
-    width: 25%;
     margin: 0 auto;
   }
   .modal__actions {

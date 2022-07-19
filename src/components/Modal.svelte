@@ -33,6 +33,7 @@
     left: 0;
     width: 100%;
     height: 100%;
+    box-sizing: border-box;
     background-color: rgb(0, 0, 0);
     background-color: rgba(0, 0, 0, 0.8);
   }
@@ -40,6 +41,7 @@
   .modal__wrapper {
     margin: 25px auto;
     max-width: 80vw;
+    box-sizing: border-box;
     padding: 1rem;
     background-color: white;
   }
