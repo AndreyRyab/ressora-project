@@ -92,7 +92,7 @@ exports.getSummary = (req, res) => {
               acc = item;
             }
             return acc;
-          }, { date: '01-01-2000' });
+          }, { date: '2000-01-01T00:00:00+03:00' });
           return res.status(200).send(result);
         });
       return;

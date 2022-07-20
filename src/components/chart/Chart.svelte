@@ -1,17 +1,16 @@
 <script>
-  import { chartData } from '../stores';
+  import { chartData } from '../../stores';
 	import Chart from 'chart.js/auto';
   import { afterUpdate } from 'svelte';
 
-  const fact = [NaN, 30, 18, 25, 22, 30, 21, NaN];
   let chart;
-	let ctx;
+	let context;
   let chartCanvas;
 
 	afterUpdate(() => {
-    ctx = chartCanvas.getContext('2d');
+    context = chartCanvas.getContext('2d');
     if (chart) chart.destroy();
-    chart = new Chart(ctx, {
+    chart = new Chart(context, {
       type: 'line',
       data: $chartData,
 		});

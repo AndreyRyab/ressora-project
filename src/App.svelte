@@ -6,20 +6,19 @@
     isPending,
     currentSummary,
     fetchedSummaryList,
-    chartData,
   } from './stores.js';
 
   import { onMount } from 'svelte';
   import Router from 'svelte-spa-router';
   import { location, push } from 'svelte-spa-router';
   import { RingLoader } from 'svelte-loading-spinners'
-
+  
   import Signin from './pages/Signin.svelte';
   import Signup from './pages/Signup.svelte';
   import Users from './pages/Users.svelte';
   import Summaries from './pages/Summaries.svelte';
   import Modal from './components/Modal.svelte';
-  import Chart from './components/Chart.svelte';
+  import Chart from './components/chart/Chart.svelte';
 
   import { getErrorStatus, showErrorMessage } from './errors/error-handler';
   import { operations } from './data';
@@ -43,7 +42,6 @@
 
   let modal;
 
-  let isSummaryExist = false;
   let summaryForm = [...operations];
 
   let errorMessage = '';
@@ -53,29 +51,23 @@
 
   const now = moment().format();
 
-  /* onMount(async () => {
+  onMount(async () => {
     if (localStorage.getItem('ressoraLoggedIn')) {
       await getUser();
+      push('/data');
     } else {
       push('/signin');
     }
-  }); */
+  });
 
   $: if (loggedIn) {
-      localStorage.setItem('ressoraLoggedIn', true);
-      getUser();
-    };
-
-  $: if ($currentUser._id) {
-    getCurrentSummary({
-      start: moment().format('DD-MM-YYYY'),
-      period: moment(now).subtract(1, 'months').format('DD-MM-YYYY'),
-      method: 'getCurrentSummary',
-    })
-    push('/data');
+    localStorage.setItem('ressoraLoggedIn', true);
+    getUser();
   };
 
-  $: if ($currentSummary.date) createInitialChart();
+  $: if ($currentUser._id) {
+    push('/data');
+  };
   
   $: fillChartWithInputData(summaryForm);
 
@@ -100,68 +92,6 @@
           data: fact,
         }]
       }, */
-  const planChartStyle = {
-    label: 'План',
-    borderWidth: 4,
-    borderColor: 'rgb(252, 186, 3)',
-    pointStyle: 'circle',
-    tension: 0.3,
-    fill: false,
-  };
-
-  const factChartStyle = {
-    label: 'Факт',
-    borderWidth: 4,
-    borderColor: 'rgb(255, 99, 132)',
-    pointStyle: 'circle',
-    tension: 0.3,
-    fill: false,
-  };
-
-  const createInitialChart = () => {
-    let initialChartData = $currentSummary.plan.operation_list.reduce(
-      (acc, item) => {
-        acc.labels.push(item.title);
-        acc.datasets[0].data.push(item.quantity);
-        return acc;
-      },
-      {
-        labels: [''],
-        datasets: [
-          {
-            data: [NaN],
-            ...planChartStyle,
-          },
-        ],
-      }
-    );
-    initialChartData.labels.push('');
-    initialChartData.datasets[0].data.push(NaN);
-
-    console.log(initialChartData)
-
-    let factChartData = null;
-
-    if ($currentSummary.fact.operation_list.length) {
-      factChartData = $currentSummary.fact.operation_list.reduce(
-      (acc, item) => {
-        acc.data.push(item.quantity);
-        return acc;
-      },
-      {
-        data: [NaN],
-        ...factChartStyle,
-      },
-    );
-      factChartData.data.push(NaN);
-    };
-
-    initialChartData.datasets.push(factChartData);
-    
-    console.log(initialChartData);
-
-    chartData.update(p => p = initialChartData);
-  };
 
   const fillChartWithInputData = (summaryForm) => {
     inputChartData = summaryForm.reduce((acc, item) => {
@@ -318,14 +248,14 @@
   };
 
   const handleSummary = () => {
-    $currentSummary.date === moment().format('DD-MM-YYYY')
+    moment($currentSummary.date).format('DD-MM-YYYY') === moment().format('DD-MM-YYYY')
       ? updateSummaryObj()
       : createSummaryObj();
   }
 
   const createSummaryObj = () => {
     const params = {
-      date: moment().format('DD-MM-YYYY'),
+      date: moment().format(),
       prod_line: 1,
       created_by: $currentUser._id,
       updated_by: null,
@@ -352,7 +282,7 @@
           operation_list: [...summaryForm],
         },
       },
-      timeStamp: moment().format('DD-MM-YYYY'),
+      timeStamp: $currentSummary.date,
       method: 'updateSummary',
     }
 
@@ -443,15 +373,10 @@
   <Modal bind:this={modal}>
     <div class="modal__data-wrapper">
       <div class="modal__chart">
-      <Chart {inputChartData}/>
+      <Chart />
       </div>
 
       <div class="modal__inputs">
-        <!-- <ul>
-          {#each $fetchedSummaryList as summary (summary.date)}
-            <li>{summary.date}</li>
-          {/each}
-        </ul>   -->
         <ul>
           {#each summaryForm as input (input.brief)}
             <li>

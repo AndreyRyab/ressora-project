@@ -2,31 +2,115 @@
   import moment from 'moment';
   import {
     currentUser,
+    chartData,
+    currentSummary,
     isPending,
-    fetchedSummaryList,
   } from '../stores';
-  import { createEventDispatcher } from 'svelte';
+
+  import { onMount } from 'svelte';
+
+  import { push } from 'svelte-spa-router';
+
   import { fade } from 'svelte/transition';
 
-  import Chart from '../components/Chart.svelte';
+  import Chart from '../components/chart/Chart.svelte';
+
+  import { getSummary } from '../apiCalls';
 
   import { operations } from '../data';
+  import { planChartStyle, factChartStyle } from '../components/chart/chartStyles';
+
+  const now = moment().format();
 
   let isCreated = false;
   let isUpdated = false;
   let form = [...operations];
 
-  export let chartData;
+  onMount(async () => {
+    if ($currentUser._id && $currentSummary.date) {
+      return;
+    }
+    if ($currentUser._id) {
+      await getCurrentSummary({
+        start: moment().format(),
+        period: moment(now).subtract(1, 'months').format(),
+        method: 'getCurrentSummary',
+      })
+    } else {
+      push('/signin');
+    }
+  });
 
-  $: {
+  $: if ($currentSummary.date) createInitialChart();
+
+  const getCurrentSummary = async (params) => {
+    try {
+      isPending.update(p => p = true);
+      const { data } = await getSummary(params);
+      console.log(data);
+      currentSummary.update(summary => summary = data);
+    } catch (error) {
+      errorMessage = showErrorMessage(error);
+    } finally {
+      isPending.update(p => p = false);
+    }
+  };
+
+  const createInitialChart = () => {
+    let initialChartData = $currentSummary.plan.operation_list.reduce(
+      (acc, item) => {
+        acc.labels.push(item.title);
+        acc.datasets[0].data.push(item.quantity);
+        return acc;
+      },
+      {
+        labels: [''],
+        datasets: [
+          {
+            data: [NaN],
+            ...planChartStyle,
+          },
+        ],
+      }
+    );
+    initialChartData.labels.push('');
+    initialChartData.datasets[0].data.push(NaN);
+
+    console.log(initialChartData)
+
+    let factChartData = null;
+
+    if ($currentSummary.fact.operation_list.length) {
+      factChartData = $currentSummary.fact.operation_list.reduce(
+      (acc, item) => {
+        acc.data.push(item.quantity);
+        return acc;
+      },
+      {
+        data: [NaN],
+        ...factChartStyle,
+      },
+    );
+      factChartData.data.push(NaN);
+    };
+
+    if (factChartData) initialChartData.datasets.push(factChartData);
+    
+    console.log(initialChartData);
+
+    chartData.update(p => p = initialChartData);
+  };
+  /* export let chartData; */
+
+  /* $: {
     fillChartWithInputData(form);
-  };
+  }; */
 
-  const openModal = () => {
+  /* const openModal = () => {
     isModalOpen.update(p => p = true);
-  };
+  }; */
 
-  const fillChartWithInputData = (form) => {
+  /* const fillChartWithInputData = (form) => {
     chartData = form.reduce((acc, item) => {
       acc.plan.push(item.quantity);
       acc.title.push(item.title);
@@ -37,15 +121,15 @@
     });
     chartData.plan.push(NaN);
     chartData.title.push('');
-  }
+  } */
 
-  const dispatch = createEventDispatcher();
+  /* const dispatch = createEventDispatcher(); */
 
-  const handleSummary = () => {
+  /* const handleSummary = () => {
     isCreated ? updateSummary() : createSummary();
-  }
+  } */
 
-  const createSummary = () => {
+  /* const createSummary = () => {
     const params = {
       date: moment().format(),
       prod_line: 1,
@@ -78,31 +162,13 @@
     }
 
     dispatch('routeEvent', params);
-  }
-
-  const getCurrentSummary = () => {
-    const now = moment().format('L');
-    const params = {
-      start: moment(now).format(),
-      method: 'getCurrentSummary',
-    };
-
-    dispatch('routeEvent', params);
-  };
-
-  const getCertainSummaries = () => {
-    const params = {
-      start: moment('07/12/2022').format(),
-      end: moment().format(),
-      method: 'getCertainSummaries',
-    };
-
-    dispatch('routeEvent', params);
-  }
+  } */
 
 </script>
 
-<section class="summaries" in:fade="{{duration: 500}}">
+<Chart />
+
+<!-- <section class="summaries" in:fade="{{duration: 500}}">
   <Chart {chartData}/>
   <ul>
     {#each $fetchedSummaryList as summary (summary.date)}
@@ -121,7 +187,7 @@
   <button disabled={$isPending} on:click|preventDefault={getCurrentSummary}>{'Получить текущий summary'}</button>
   <button disabled={$isPending} on:click|preventDefault={getCertainSummaries}>{'Получить summaries'}</button>
 
-</section>
+</section> -->
 
 <style>
   ul {

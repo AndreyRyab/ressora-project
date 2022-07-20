@@ -2,12 +2,15 @@
   import { fade } from 'svelte/transition';
 
   let shown = false;
+
   export function show() {
     shown = true;
-  }
+  };
+
   export function hide() {
     shown = false;
-  }
+  };
+  
 </script>
 
 <svelte:window
