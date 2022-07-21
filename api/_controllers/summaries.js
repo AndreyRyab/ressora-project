@@ -79,15 +79,15 @@ exports.getSummary = (req, res) => {
       console.log('contr, getCurrentSummary');
       Summary.find({
         date: {
-          $gte: req.body.period,
-          $lte: req.body.start,
+          $gte: req.body.startPeriod,
+          $lte: req.body.endPeriod,
         },
       })
-        .then((summary) => {
-          if (!summary.length) {
+        .then((summaryList) => {
+          if (!summaryList.length) {
             return res.status(404).send({ message: NOT_FOUND });
           }
-          const result = summary.reduce((acc, item) => {
+          const result = summaryList.reduce((acc, item) => {
             if (item.date > acc.date) {
               acc = item;
             }
@@ -100,15 +100,15 @@ exports.getSummary = (req, res) => {
     console.log('contr, getCertainSummaries');
     Summary.find({
       date: {
-        $gte: req.body.start,
-        $lte: req.body.end,
+        $gt: req.body.start,
+        $lt: req.body.end,
       },
     })
-      .then((summary) => {
-        if (!summary) {
+      .then((summaryList) => {
+        if (!summaryList.length) {
           return res.status(404).send({ message: NOT_FOUND });
         }
-        return res.status(200).send(summary);
+        return res.status(200).send(summaryList);
       });
   } catch (err) {
     console.log(err.message)

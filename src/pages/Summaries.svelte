@@ -3,6 +3,7 @@
   import {
     currentUser,
     chartData,
+    fetchedSummaryList,
     currentSummary,
     isPending,
   } from '../stores';
@@ -18,9 +19,13 @@
   import { getSummary } from '../apiCalls';
 
   import { operations } from '../data';
+  import { showErrorMessage } from '../errors/error-handler';
   import { planChartStyle, factChartStyle } from '../components/chart/chartStyles';
 
+  let errorMessage;
+  
   const now = moment().format();
+  let inputDate/*  = moment(now).format('YYYY-MM-DD') */;
 
   let isCreated = false;
   let isUpdated = false;
@@ -31,24 +36,36 @@
       return;
     }
     if ($currentUser._id) {
-      await getCurrentSummary({
-        start: moment().format(),
-        period: moment(now).subtract(1, 'months').format(),
+      await findSummary({
         method: 'getCurrentSummary',
+        startPeriod: moment(now).subtract(1, 'months').format(),
+        endPeriod: moment().format(),
       })
     } else {
       push('/signin');
     }
   });
 
-  $: if ($currentSummary.date) createInitialChart();
+  /* $: if ($currentSummary.date) createInitialChart(); */
+  
+  $: if (inputDate) findSummary({
+    method: 'getCertainSummaries',
+    start: moment(inputDate).format(),
+    end: moment(inputDate).add(1, 'd').format(),
+  });
 
-  const getCurrentSummary = async (params) => {
+  const findSummary = async (params) => {
     try {
       isPending.update(p => p = true);
       const { data } = await getSummary(params);
-      console.log(data);
-      currentSummary.update(summary => summary = data);
+      if (params.method === 'getCurrentSummary') {
+        currentSummary.update(summary => summary = data);
+      }
+      if (params.method === 'getCertainSummaries') {
+        fetchedSummaryList.update(summaryList => summaryList = data);
+        currentSummary.update(summary => summary = $fetchedSummaryList[0]); // TODO: remove
+      }
+      createInitialChart();
     } catch (error) {
       errorMessage = showErrorMessage(error);
     } finally {
@@ -100,128 +117,75 @@
 
     chartData.update(p => p = initialChartData);
   };
-  /* export let chartData; */
-
-  /* $: {
-    fillChartWithInputData(form);
-  }; */
-
-  /* const openModal = () => {
-    isModalOpen.update(p => p = true);
-  }; */
-
-  /* const fillChartWithInputData = (form) => {
-    chartData = form.reduce((acc, item) => {
-      acc.plan.push(item.quantity);
-      acc.title.push(item.title);
-      return acc;
-    }, {
-      plan: [NaN],
-      title: [''],
-    });
-    chartData.plan.push(NaN);
-    chartData.title.push('');
-  } */
-
-  /* const dispatch = createEventDispatcher(); */
-
-  /* const handleSummary = () => {
-    isCreated ? updateSummary() : createSummary();
-  } */
-
-  /* const createSummary = () => {
-    const params = {
-      date: moment().format(),
-      prod_line: 1,
-      created_by: $currentUser._id,
-      updated_by: null,
-      plan:  {
-        operation_list: [...form],
-      },
-      fact: {
-        operation_list: [],
-      },
-      method: 'createSummary',
-    }
-
-    dispatch('routeEvent', params);
-  }
-
-  const updateSummary = () => {
-    const params = {
-      update: {
-        update: {
-          updated_by: $currentUser._id,
-          fact: {
-            operation_list: [...form],
-          },
-        },
-      },
-      timeStamp: moment().format(),
-      method: 'updateSummary',
-    }
-
-    dispatch('routeEvent', params);
-  } */
 
 </script>
 
-<Chart />
+<section class="summaries">
+  {#if $currentSummary.date}
+    <h2>{
+      ($currentSummary.date === 'Invalid date')
+      ? 'Данные загружаются...'
+      : `Данные за ${moment($currentSummary.date).format('DD.MM.YYYY')}`
+    }</h2>
+  {/if}
+  
+  <div class="summaries__filter">
+    <label>
+      Выбрать дату:
+      <input
+        disabled={$isPending}
+        type="date"
+        class="summaries__input-date"
+        bind:value="{inputDate}"
+        min="2022-07-16"
+        max="{moment().format('YYYY-MM-DD')}"
+      >
+    </label>
 
-<!-- <section class="summaries" in:fade="{{duration: 500}}">
-  <Chart {chartData}/>
-  <ul>
-    {#each $fetchedSummaryList as summary (summary.date)}
-      <li>{summary.date}</li>
-    {/each}
-  </ul>  
-  <ul>
-    {#each form as input (input.brief)}
-      <li>
-        {input.title}
-        <input disabled={$isPending} type="number" bind:value={input.quantity} min=0 max=100>
-      </li>
-    {/each}
-  </ul>
-  <button disabled={$isPending} on:click|preventDefault={handleSummary}>{isCreated ? 'Обновить' : 'Создать'}</button>
-  <button disabled={$isPending} on:click|preventDefault={getCurrentSummary}>{'Получить текущий summary'}</button>
-  <button disabled={$isPending} on:click|preventDefault={getCertainSummaries}>{'Получить summaries'}</button>
-
-</section> -->
+    <label>
+      <input
+        disabled={$isPending}
+        type="checkbox"
+        class="summaries__checkbox"
+      >
+      Смотреть данные за предыдущий день
+    </label>
+  </div>
+  
+  <Chart />
+</section>
 
 <style>
-  ul {
-    margin: 0;
-    list-style: none;
-  }
-
-  li {
-    display: flex;
-    gap: 8px;
-    width: 250px;
-    align-items: baseline;
-    justify-content: space-between;
-    border-bottom: 1px solid grey;
-    padding: 8px 0
-  }
-
-  input {
-    width: 50px;
-    border: none;
-    margin: 0;
-  }
   .summaries {
     display: flex;
     flex-direction: column;
-    align-items: center;
     margin: 20px auto;
     width: 90%;
+    height: 90%;
   }
 
-  /* .summaries__title {
-    font-size: 30px;
-    margin: 0 auto;
-  } */
+  .summaries__filter {
+    display: flex;
+    gap: 25px;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .summaries__checkbox {
+    margin: 0;
+  }
+
+  .summaries__input-date {
+    margin: 0;
+    width: 130px;
+  }
+
+  input {
+    width: 24px;
+    border: none;
+    margin: 0;
+  }
 
 </style>
 

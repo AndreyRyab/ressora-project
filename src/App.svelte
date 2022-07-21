@@ -211,18 +211,6 @@
     }
   };
 
-  const getCertainSummaries = async (params) => {
-    try {
-      isPending.update(p => p = true);
-      const { data } = await getSummary(params);
-      fetchedSummaryList.update(summaryList => summaryList = data);
-    } catch (error) {
-      errorMessage = showErrorMessage(error);
-    } finally {
-      isPending.update(p => p = false);
-    }
-  };
-
   const createSummary = async (params) => {
     try {
       isPending.update(p => p = true);
@@ -480,7 +468,6 @@
     align-items: center;
 		margin: 0 auto;
 		max-width: 240px;
-		text-align: center;
 		padding: 1em;
 	}
 
