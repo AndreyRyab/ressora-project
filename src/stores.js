@@ -14,18 +14,35 @@ export const currentSummary = writable({
   prod_line: 1,
   created_by: '',
   updated_by: '',
-  plan:  {
+  plan: {
     operation_list: operations,
   },
   fact: {
     operation_list: operations,
   },
+  chartData: null,
 });
 
-export const fetchedSummaryList = writable([]);
+export const previousSummary = writable({
+  date: '',
+  prod_line: 1,
+  created_by: '',
+  updated_by: '',
+  plan: {
+    operation_list: operations,
+  },
+  fact: {
+    operation_list: operations,
+  },
+  chartData: null,
+});
+
+export const certainSummaryList = writable([]);
 
 export const userList = writable([]);
 
 export const isPending = writable(false);
 
 export const chartData = writable({});
+
+export const isInputModalOpen = writable(false);

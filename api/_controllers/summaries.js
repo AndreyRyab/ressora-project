@@ -45,13 +45,13 @@ exports.createSummary = (req, res) => {
 
 exports.updateSummary = (req, res) => {
   console.log('contr, updateSummary');
-  const { timeStamp, update } = JSON.parse(req.body);
+  const { id, update } = JSON.parse(req.body);
   if (!update) {
     console.log('!update', req.body);
     return res.status(400).send({ message: BAD_REQUEST });
   }
-  Summary.findOneAndUpdate(
-    timeStamp,
+  Summary.findByIdAndUpdate(
+    id,
     { $set: update },
     { new: true },
     )
@@ -75,24 +75,19 @@ exports.updateSummary = (req, res) => {
 exports.getSummary = (req, res) => {
   req.body = JSON.parse(req.body);
   try {
-    if (req.body.method === 'getCurrentSummary') {
-      console.log('contr, getCurrentSummary');
+    if (req.body.method === 'getLastSummaries') {
+      console.log('contr, getLastSummaries');
       Summary.find({
         date: {
           $gte: req.body.startPeriod,
-          $lte: req.body.endPeriod,
+          $lt: req.body.endPeriod,
         },
       })
         .then((summaryList) => {
           if (!summaryList.length) {
             return res.status(404).send({ message: NOT_FOUND });
           }
-          const result = summaryList.reduce((acc, item) => {
-            if (item.date > acc.date) {
-              acc = item;
-            }
-            return acc;
-          }, { date: '2000-01-01T00:00:00+03:00' });
+          const result = summaryList.slice(-2);
           return res.status(200).send(result);
         });
       return;

@@ -5,7 +5,8 @@
     userList,
     isPending,
     currentSummary,
-    fetchedSummaryList,
+    chartData,
+    isInputModalOpen,
   } from './stores.js';
 
   import { onMount } from 'svelte';
@@ -17,11 +18,14 @@
   import Signup from './pages/Signup.svelte';
   import Users from './pages/Users.svelte';
   import Summaries from './pages/Summaries.svelte';
+
   import Modal from './components/Modal.svelte';
   import Chart from './components/chart/Chart.svelte';
 
   import { getErrorStatus, showErrorMessage } from './errors/error-handler';
   import { operations } from './data';
+
+  import fillChartWithInputData from './helpers/fill-chart-with-input-data';
 
   import {
   LOGIN_PASSWORD_ERR,
@@ -37,17 +41,14 @@
     deleteUser,
     createNewSummary,
     updateSummary,
-    getSummary,
   } from './apiCalls';
 
   let modal;
 
   let summaryForm = [...operations];
 
-  let errorMessage = '';
+  let errorMessage = null;
   let loggedIn = false;
-
-  let inputChartData;
 
   const now = moment().format();
 
@@ -69,41 +70,12 @@
     push('/data');
   };
   
-  $: fillChartWithInputData(summaryForm);
-
-  /* {
-        labels: chartData.labels,
-        datasets: [{
-          label: 'План',
-          borderWidth: 4,
-          borderColor: 'rgb(252, 186, 3)',
-          pointStyle: 'circle',
-          tension: 0.3,
-          fill: false,
-          data: chartData.plan,
-        },
-        {
-          label: 'Факт',
-          borderWidth: 4,
-          borderColor: 'rgb(255, 99, 132)',
-          pointStyle: 'circle',
-          tension: 0.3,
-          fill: false,
-          data: fact,
-        }]
-      }, */
-
-  const fillChartWithInputData = (summaryForm) => {
-    inputChartData = summaryForm.reduce((acc, item) => {
-      acc.plan.push(item.quantity);
-      acc.labels.push(item.title);
-      return acc;
-    }, {
-      plan: [NaN],
-      labels: [''],
-    });
-    inputChartData.plan.push(NaN);
-    inputChartData.labels.push('');
+  $: if ($isInputModalOpen) {
+    if ($currentSummary.plan.operation_list.length) {
+      chartData.update(p => p = fillChartWithInputData(summaryForm, true));
+    } else {
+      chartData.update(p => p = fillChartWithInputData(summaryForm, false));
+    }
   }
 
   const createUser = async (params) => {
@@ -198,19 +170,6 @@
     }
   };
 
-  const getCurrentSummary = async (params) => {
-    try {
-      isPending.update(p => p = true);
-      const { data } = await getSummary(params);
-      console.log(data);
-      currentSummary.update(summary => summary = data);
-    } catch (error) {
-      errorMessage = showErrorMessage(error);
-    } finally {
-      isPending.update(p => p = false);
-    }
-  };
-
   const createSummary = async (params) => {
     try {
       isPending.update(p => p = true);
@@ -235,51 +194,40 @@
     }
   };
 
-  const handleSummary = () => {
-    moment($currentSummary.date).format('DD-MM-YYYY') === moment().format('DD-MM-YYYY')
-      ? updateSummaryObj()
-      : createSummaryObj();
+  const handleSummary = async () => {
+    if (moment($currentSummary.date).format('DD.MM.YYYY') === moment(now).format('DD.MM.YYYY')) {
+      await updateCurrentSummary(updateSummaryObj());
+      push('/data');
+      return;
+    }
+    await createSummary(createSummaryObj());
+    push('/data');
   }
 
-  const createSummaryObj = () => {
-    const params = {
-      date: moment().format(),
-      prod_line: 1,
-      created_by: $currentUser._id,
-      updated_by: null,
-      plan:  {
+  const createSummaryObj = () => ({
+    date: moment().format(),
+    prod_line: 1,
+    created_by: $currentUser._id,
+    updated_by: null,
+    plan:  {
+      operation_list: [...summaryForm],
+    },
+    fact: {
+      operation_list: [],
+    },
+    method: 'createSummary',
+  });
+
+  const updateSummaryObj = () => ({
+    update: {
+      updated_by: $currentUser._id,
+      fact: {
         operation_list: [...summaryForm],
       },
-      fact: {
-        operation_list: [],
-      },
-      method: 'createSummary',
-    }
-
-    console.log('createSummary: ', params);
-
-    /* dispatch('routeEvent', params); */
-    createSummary(params);
-  }
-
-  const updateSummaryObj = () => {
-    const params = {
-      update: {
-        updated_by: $currentUser._id,
-        fact: {
-          operation_list: [...summaryForm],
-        },
-      },
-      timeStamp: $currentSummary.date,
-      method: 'updateSummary',
-    }
-
-    console.log('updateSummary: ', params);
-
-    updateCurrentSummary(params);
-
-    /* dispatch('routeEvent', params); */
-  }
+    },
+    id: $currentSummary._id,
+    method: 'updateSummary',
+  });
 
   const routeEventHandler = (data) => {
     if (data.detail.method === 'signin') {
@@ -300,9 +248,6 @@
     if (data.detail.method === 'updateSummary') {
       updateCurrentSummary(data.detail);
     }
-    /* if (data.detail.method === 'getCurrentSummary') {
-      getCurrentSummary(data.detail);
-    } */
     if (data.detail.method === 'getCertainSummaries') {
       getCertainSummaries(data.detail);
     }
@@ -336,7 +281,10 @@
   </header>
 
   <main>
-    {#if $currentUser._id}
+    {
+      #if true}
+        
+    
       <div class="main-actions__wrapper">
         <button class="button button_accent" on:click={() => modal.show()}>Внести данные</button>
       </div>
@@ -360,6 +308,14 @@
 
   <Modal bind:this={modal}>
     <div class="modal__data-wrapper">
+      <h2>
+        Вы вносите {
+          $currentSummary.plan.length
+          ? 'фактические'
+          : 'плановые'
+        } показатели за {moment().format('DD.MM.YYYY')}
+      </h2>
+      
       <div class="modal__chart">
       <Chart />
       </div>
@@ -390,7 +346,6 @@
     </div>
   {/if}
 </body>
-
 
 <style>
   body {

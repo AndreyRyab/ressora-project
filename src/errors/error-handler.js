@@ -3,7 +3,7 @@ import * as errors from './messages-constants';
 const errorToMessageMap = {
   '400': errors.BAD_REQUEST,
   '401': errors.AUTH_ERROR,
-  '404': errors.NOT_FOUND_USER,
+  '404': errors.NOT_FOUND,
   '409': errors.CONFLICT_ERROR,
   '500': errors.SERVER_ERR,
 };

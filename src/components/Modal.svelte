@@ -1,13 +1,21 @@
 <script>
+  import {
+    isInputModalOpen,
+    chartData,
+    currentSummary,
+  } from '../stores';
   import { fade } from 'svelte/transition';
 
   let shown = false;
 
   export function show() {
+    isInputModalOpen.update(p => p = true);
     shown = true;
   };
 
   export function hide() {
+    /* chartData.update(p => p = $currentSummary); */
+    isInputModalOpen.update(p => p = false);
     shown = false;
   };
   

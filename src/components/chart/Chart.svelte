@@ -7,7 +7,7 @@
 	let context;
   let chartCanvas;
 
-	afterUpdate(() => {
+  afterUpdate(() => {
     context = chartCanvas.getContext('2d');
     if (chart) chart.destroy();
     chart = new Chart(context, {

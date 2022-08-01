@@ -9,11 +9,8 @@ module.exports = async function(req, res) {
     return returnTemplate(req, res);
   }
 
-  /* console.log(JSON.stringify(req.body)); */
-  /* req.body = JSON.stringify(req.body); */
-
-  if (req.body.method === 'getCurrentSummary' || req.body.method === 'getCertainSummaries') {
-    console.log('getCurrentSummary/getCertainSummaries from summary/api');
+  if (req.body.method === 'getLastSummaries' || req.body.method === 'getCertainSummaries') {
+    console.log('getLastSummaries/getCertainSummaries from summary/api');
     req.body = JSON.stringify(req.body);
     console.log('req.body:', req.body);
     return getSummary(req, res);
