@@ -5,27 +5,33 @@
     userList,
     isPending,
     currentSummary,
+    previousSummary,
+    certainSummaryList,
     chartData,
     isInputModalOpen,
+    inputDate,
   } from './stores.js';
 
   import { onMount } from 'svelte';
   import Router from 'svelte-spa-router';
   import { location, push } from 'svelte-spa-router';
-  import { RingLoader } from 'svelte-loading-spinners'
-  
+  import { RingLoader } from 'svelte-loading-spinners';
+
+  import { getSummary } from './apiCalls';
+
   import Signin from './pages/Signin.svelte';
   import Signup from './pages/Signup.svelte';
   import Users from './pages/Users.svelte';
   import Summaries from './pages/Summaries.svelte';
-
+  
   import Modal from './components/Modal.svelte';
   import Chart from './components/chart/Chart.svelte';
-
+  
   import { getErrorStatus, showErrorMessage } from './errors/error-handler';
   import { operations } from './data';
-
+  
   import fillChartWithInputData from './helpers/fill-chart-with-input-data';
+  import createChartData from './helpers/create-chart-data';
 
   import {
   LOGIN_PASSWORD_ERR,
@@ -197,12 +203,64 @@
   const handleSummary = async () => {
     if (moment($currentSummary.date).format('DD.MM.YYYY') === moment(now).format('DD.MM.YYYY')) {
       await updateCurrentSummary(updateSummaryObj());
-      push('/data');
-      return;
+    } else {
+      await createSummary(createSummaryObj());
     }
-    await createSummary(createSummaryObj());
+    modal.hide();
+    isInputModalOpen.update(p => p = false);
+    await findSummary({
+      method: 'getLastSummaries',
+      startPeriod: moment(now).subtract(1, 'months').format(),
+      endPeriod: moment(now).add(1, 'd').format(),
+    });
     push('/data');
   }
+
+  const findSummary = async (params) => {
+    errorMessage = null;
+    try {
+      isPending.update((p) => (p = true));
+
+      const { data } = await getSummary(params);
+
+      if (params.method === 'getLastSummaries') {
+        currentSummary.update(
+          p => p = {
+            ...data[1],
+            chartData: createChartData(data[1]),
+          }
+        );
+
+        previousSummary.update(
+          p => p = {
+            ...data[0],
+            chartData: createChartData(data[0]),
+          }
+        );
+
+        chartData.update(p => p = $currentSummary.chartData);
+      }
+
+      if (params.method === 'getCertainSummaries') {
+        certainSummaryList.update(
+          p => p = {
+            ...data[0],
+            chartData: createChartData(data[0]),
+          }
+        );
+
+        chartData.update(p => p = $certainSummaryList.chartData);
+
+        inputDate.update(p => p = null);
+      }
+    } catch (error) {
+      errorMessage = showErrorMessage(error);
+      if (params.method === 'getCertainSummaries') chartData.update(p => p = $currentSummary.chartData);
+      inputDate.update(p => p = null);
+    } finally {
+      isPending.update(p => p = false);
+    }
+  };
 
   const createSummaryObj = () => ({
     date: moment().format(),
@@ -248,8 +306,8 @@
     if (data.detail.method === 'updateSummary') {
       updateCurrentSummary(data.detail);
     }
-    if (data.detail.method === 'getCertainSummaries') {
-      getCertainSummaries(data.detail);
+    if (data.detail.method === 'getCertainSummaries' || data.detail.method === 'getLastSummaries') {
+      findSummary(data.detail);
     }
   }
 
@@ -281,10 +339,7 @@
   </header>
 
   <main>
-    {
-      #if true}
-        
-    
+    {#if $currentUser._id}
       <div class="main-actions__wrapper">
         <button class="button button_accent" on:click={() => modal.show()}>Внести данные</button>
       </div>

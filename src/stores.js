@@ -46,3 +46,5 @@ export const isPending = writable(false);
 export const chartData = writable({});
 
 export const isInputModalOpen = writable(false);
+
+export const inputDate = writable(null);

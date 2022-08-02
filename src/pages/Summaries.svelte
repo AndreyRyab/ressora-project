@@ -7,34 +7,24 @@
     currentSummary,
     previousSummary,
     isPending,
-    isInputModalOpen,
+    inputDate,
   } from '../stores';
 
-  import { onMount } from 'svelte';
+  import { createEventDispatcher, onMount } from 'svelte';
 
   import { push } from 'svelte-spa-router';
 
-  import { fade } from 'svelte/transition';
-
   import Chart from '../components/chart/Chart.svelte';
 
-  import { getSummary } from '../apiCalls';
-
-  import createChartData from '..//helpers/create-chart-data';
-
   import { operations } from '../data';
-  import { showErrorMessage } from '../errors/error-handler';
+  
+  const dispatch = createEventDispatcher();
 
   let errorMessage;
 
   let isPreviousSummary = false;
 
   const now = moment().format('YYYY-MM-DD');
-  let inputDate /*  = moment(now).format('YYYY-MM-DD') */;
-
-  let isCreated = false;
-  let isUpdated = false;
-  let form = [...operations];
 
   onMount(async () => {
     if ($currentUser._id && $currentSummary.date) {
@@ -51,61 +41,19 @@
     }
   });
 
-  $: if (inputDate)
+  $: if ($inputDate) {
     findSummary({
       method: 'getCertainSummaries',
-      start: moment(inputDate).format(),
-      end: moment(inputDate).add(1, 'd').format(),
+      start: moment($inputDate).format(),
+      end: moment($inputDate).add(1, 'd').format(),
     });
+  }
 
-  const findSummary = async (params) => {
-    errorMessage = null;
-    try {
-      isPending.update((p) => (p = true));
-
-      const { data } = await getSummary(params);
-
-      if (params.method === 'getLastSummaries') {
-        currentSummary.update(
-          p => p = {
-            ...data[1],
-            chartData: createChartData(data[1]),
-          }
-        );
-
-        previousSummary.update(
-          p => p = {
-            ...data[0],
-            chartData: createChartData(data[0]),
-          }
-        );
-
-        chartData.update(p => p = $currentSummary.chartData);
-      }
-
-      if (params.method === 'getCertainSummaries') {
-        console.log('getCertainSummaries data in findSummary: ', data)
-        certainSummaryList.update(
-          p => p = {
-            ...data[0],
-            chartData: createChartData(data[0]),
-          }
-        );
-
-        chartData.update(p => p = $certainSummaryList.chartData);
-        
-        inputDate = null;
-      }
-    } catch (error) {
-      errorMessage = showErrorMessage(error);
-      if (params.method === 'getCertainSummaries') chartData.update(p => p = $currentSummary.chartData);
-      inputDate = null;
-    } finally {
-      isPending.update(p => p = false);
-    }
+  const findSummary = (params) => {
+    dispatch('routeEvent', params);
   };
 
- const togglePrevCurrentSummary = (summary = null) => {
+  const togglePrevCurrentSummary = (summary = null) => {
     if (summary === 'current') {
       chartData.update(p => p = $currentSummary.chartData);
       return;
@@ -117,6 +65,7 @@
     }
     chartData.update(p => p = $currentSummary.chartData);
   };
+
 </script>
 
 <style>
@@ -203,7 +152,7 @@
           disabled={$isPending}
           type="date"
           class="summaries__input-date"
-          bind:value={inputDate}
+          bind:value={$inputDate}
           min="2022-07-16"
           max={moment().format('YYYY-MM-DD')} />
       </label>
