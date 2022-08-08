@@ -58,14 +58,14 @@
 
   const now = moment().format();
 
-  onMount(async () => {
+  /* onMount(async () => {
     if (localStorage.getItem('ressoraLoggedIn')) {
       await getUser();
       push('/data');
     } else {
       push('/signin');
     }
-  });
+  }); */
 
   $: if (loggedIn) {
     localStorage.setItem('ressoraLoggedIn', true);
@@ -192,6 +192,7 @@
     try {
       isPending.update(p => p = true);
       const { data } = await updateSummary(params);
+      console.log('data: ', data);
       currentSummary.update(summary => summary = data);
     } catch (error) {
       errorMessage = showErrorMessage(error);
@@ -201,7 +202,10 @@
   };
 
   const handleSummary = async () => {
-    if (moment($currentSummary.date).format('DD.MM.YYYY') === moment(now).format('DD.MM.YYYY')) {
+    if (true/* moment($currentSummary.date).format('DD.MM.YYYY') === moment(now).format('DD.MM.YYYY') */) {
+      
+      console.log('$currentSummary: ', $currentSummary);
+      console.log('updateSummaryObj(): ', updateSummaryObj());
       await updateCurrentSummary(updateSummaryObj());
     } else {
       await createSummary(createSummaryObj());
@@ -223,22 +227,26 @@
 
       const { data } = await getSummary(params);
 
+      console.log('findSummary, data: ', data)
+
       if (params.method === 'getLastSummaries') {
         currentSummary.update(
-          p => p = {
-            ...data[1],
-            chartData: createChartData(data[1]),
-          }
-        );
-
-        previousSummary.update(
           p => p = {
             ...data[0],
             chartData: createChartData(data[0]),
           }
         );
+        if (data[1]) {
+          previousSummary.update(
+            p => p = {
+              ...data[1],
+              chartData: createChartData(data[1]),
+            }
+          );
+        }
 
         chartData.update(p => p = $currentSummary.chartData);
+        console.log('getLastSummaries')
       }
 
       if (params.method === 'getCertainSummaries') {
@@ -266,22 +274,22 @@
     date: moment().format(),
     prod_line: 1,
     created_by: $currentUser._id,
-    updated_by: null,
     plan:  {
       operation_list: [...summaryForm],
     },
-    fact: {
-      operation_list: [],
-    },
+    fact: [],
     method: 'createSummary',
   });
 
   const updateSummaryObj = () => ({
     update: {
-      updated_by: $currentUser._id,
-      fact: {
-        operation_list: [...summaryForm],
-      },
+      fact: [
+        ...$currentSummary.fact,
+        {
+          created_by: $currentUser._id,
+          operation_list: [...summaryForm],
+        },
+      ],
     },
     id: $currentSummary._id,
     method: 'updateSummary',

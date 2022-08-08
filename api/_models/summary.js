@@ -6,6 +6,19 @@ const operationSchema = new mongoose.Schema({
   quantity: Number,
 });
 
+const dataInputSchema = new mongoose.Schema(
+  {
+    created_by: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'user',
+    },
+    operation_list: [
+      operationSchema,
+    ],
+  },
+  { timestamps: true },
+);
+
 const summarySchema = new mongoose.Schema({
   date: {
     type: String,
@@ -20,20 +33,10 @@ const summarySchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'user',
   },
-  updated_by: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'user',
-  },
-  plan:  {
-    operation_list: [
-      operationSchema,
-    ],
-  },
-  fact: {
-    operation_list: [
-      operationSchema,
-    ],
-  },
-})
+  plan: dataInputSchema,
+  fact: [
+    dataInputSchema,
+  ],
+}, { timestamps: true });
 
 module.exports = mongoose.model('summary', summarySchema);

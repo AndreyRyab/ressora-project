@@ -25,8 +25,22 @@ const createChartData = (dataToShow) => {
 
   let factChartData = null;
 
-  if (dataToShow.fact.operation_list.length) {
-    factChartData = dataToShow.fact.operation_list.reduce(
+  if (dataToShow.fact.length) {
+
+    factChartDataObj = dataToShow.fact.reduce((acc, dataInput) => {
+      dataInput.operation_list.forEach(operation => {
+        acc[operation.brief]
+        ? acc[operation.brief] += operation.quantity
+        : acc[operation.brief] = operation.quantity;
+      });
+      return acc;
+    })
+
+    factChartData = {
+      data: [NaN, ...Object.values(factChartDataObj), NaN],
+    }
+    
+    /* .operation_list.reduce(
       (acc, item) => {
         acc.data.push(item.quantity);
         return acc;
@@ -35,11 +49,12 @@ const createChartData = (dataToShow) => {
         data: [NaN],
         ...factChartStyle,
       }
-    );
-    factChartData.data.push(NaN);
+    ); */
+    /* factChartData.data.push(NaN); */
+    console.log(factChartData)
   }
 
-  if (factChartData) newChartData.datasets.push(factChartData);
+  if (factChartData) newChartData.datasets.push({ ...factChartData, ...factChartStyle });
 
   return ({
     ...newChartData,
