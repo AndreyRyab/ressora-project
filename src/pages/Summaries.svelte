@@ -8,6 +8,8 @@
     previousSummary,
     isPending,
     inputDate,
+    inputDateStart,
+    inputDateEnd,
   } from '../stores';
 
   import { createEventDispatcher, onMount } from 'svelte';
@@ -15,8 +17,6 @@
   import { push } from 'svelte-spa-router';
 
   import Chart from '../components/chart/Chart.svelte';
-
-  import { operations } from '../data';
   
   const dispatch = createEventDispatcher();
 
@@ -64,6 +64,14 @@
       return;
     }
     chartData.update(p => p = $currentSummary.chartData);
+  };
+
+  const searchSummaries = () => {
+    findSummary({
+      method: 'getCertainSummaries',
+      start: moment($inputDateStart).format(),
+      end: moment($inputDateEnd).add(1, 'd').format(),
+    });
   };
 
 </script>
@@ -116,20 +124,28 @@
     margin: 0 auto;
   } */
 
+  .summaries__form {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .summaries__form-row {
+    display: flex;
+  }
+
   input {
     width: 24px;
     border: none;
     margin: 0;
   }
+
+  label {
+    align-self: center;
+  }
 </style>
 
 <section class="summaries">
-  <!-- <p>chartData: {JSON.stringify($chartData.date)}</p>
-  <p>current: {JSON.stringify($currentSummary.date)}</p>
-  <p>previous: {JSON.stringify($previousSummary.date)}</p>
-  <p>certainSummaryList: {JSON.stringify($certainSummaryList.date)}</p>
-  <p>isPreviousSummary: {isPreviousSummary}</p> -->
-
   <section class="summaries__chart-wrapper">
     <div class="summaries__chart">
       {#if !$isPending}
@@ -147,7 +163,7 @@
       {/if}
 
       <label>
-        Выбрать дату:
+        <h4>Выбрать дату:</h4>
         <input
           disabled={$isPending}
           type="date"
@@ -157,27 +173,71 @@
           max={moment().format('YYYY-MM-DD')} />
       </label>
 
-      {#if $previousSummary.date && ($chartData.date !== $certainSummaryList.date)}
-        <label>
+      {#if $previousSummary.date}
+        <div>
           <input
             disabled={$isPending}
             type="button"
             class="summaries__days-toggler"
             value={isPreviousSummary ? `Вернуться на ${moment($currentSummary.date).format('DD.MM.YYYY')}` : 'Предыдущий день'}
-            on:click={() => togglePrevCurrentSummary()} />
-        </label>
+            on:click={() => togglePrevCurrentSummary()}
+          />
+        </div>
       {/if}
 
-      {#if $certainSummaryList.date === $chartData.date}
-        <label>
+      {#if $certainSummaryList.length}
+      <div>
+        <input
+          disabled={$isPending}
+          type="button"
+          class="summaries__days-toggler"
+          value={`Вернуться на ${moment($currentSummary.date).format('DD.MM.YYYY')}`}
+          on:click={() => togglePrevCurrentSummary('current')}
+        />
+      </div>
+      {/if}
+
+      <form class="summaries__form">
+        <h4 class="summaries__form-title">Данные за период</h4>
+
+        <div class="summaries__form-row">
+          <label for="start">с</label>
+          <input
+            disabled={$isPending}  
+            name="start"
+            type="date"
+            min={'2022-08-06'}
+            max={$inputDateEnd || moment().format('YYYY-MM-DD')}
+            class="summaries__input-date"
+            bind:value={$inputDateStart}
+            required
+          >
+        </div>
+        
+        <div class="summaries__form-row">
+          <label for="end">по</label>
           <input
             disabled={$isPending}
-            type="button"
-            class="summaries__days-toggler"
-            value={`Вернуться на ${moment($currentSummary.date).format('DD.MM.YYYY')}`}
-            on:click={() => togglePrevCurrentSummary('current')} />
-        </label>
-      {/if}
+            name="end"
+            type="date"
+            min={$inputDateStart || '2022-08-06'}
+            max={moment().format('YYYY-MM-DD')}
+            class="summaries__input-date"
+            bind:value={$inputDateEnd}
+            required
+            >
+        </div>
+
+        <div class="summaries__form-row">
+          <input
+          disabled={$isPending}
+          type="button"
+          class="summaries__days-toggler"
+          value="Показать"
+          on:click={() => searchSummaries()}
+        />
+        </div>
+      </form>
     </div>
   </section>
 </section>

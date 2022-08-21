@@ -58,14 +58,14 @@
 
   const now = moment().format();
 
-  /* onMount(async () => {
+  onMount(async () => {
     if (localStorage.getItem('ressoraLoggedIn')) {
       await getUser();
       push('/data');
     } else {
       push('/signin');
     }
-  }); */
+  });
 
   $: if (loggedIn) {
     localStorage.setItem('ressoraLoggedIn', true);
@@ -192,7 +192,6 @@
     try {
       isPending.update(p => p = true);
       const { data } = await updateSummary(params);
-      console.log('data: ', data);
       currentSummary.update(summary => summary = data);
     } catch (error) {
       errorMessage = showErrorMessage(error);
@@ -202,12 +201,11 @@
   };
 
   const handleSummary = async () => {
-    if (true/* moment($currentSummary.date).format('DD.MM.YYYY') === moment(now).format('DD.MM.YYYY') */) {
-      
-      console.log('$currentSummary: ', $currentSummary);
+    if (moment($currentSummary.date).format('DD.MM.YYYY') === moment(now).format('DD.MM.YYYY')) {
       console.log('updateSummaryObj(): ', updateSummaryObj());
       await updateCurrentSummary(updateSummaryObj());
     } else {
+      console.log('createSummaryObj(): ', createSummaryObj());
       await createSummary(createSummaryObj());
     }
     modal.hide();
@@ -246,7 +244,6 @@
         }
 
         chartData.update(p => p = $currentSummary.chartData);
-        console.log('getLastSummaries')
       }
 
       if (params.method === 'getCertainSummaries') {
@@ -294,6 +291,11 @@
     id: $currentSummary._id,
     method: 'updateSummary',
   });
+
+  const openModal = () => {
+    summaryForm.forEach(item => item.quantity = 0);
+    modal.show();
+  }
 
   const routeEventHandler = (data) => {
     if (data.detail.method === 'signin') {
@@ -349,7 +351,7 @@
   <main>
     {#if $currentUser._id}
       <div class="main-actions__wrapper">
-        <button class="button button_accent" on:click={() => modal.show()}>Внести данные</button>
+        <button class="button button_accent" on:click={() => openModal()}>Внести данные</button>
       </div>
     {/if}
 
@@ -373,7 +375,7 @@
     <div class="modal__data-wrapper">
       <h2>
         Вы вносите {
-          $currentSummary.plan.length
+          $currentSummary.fact.length
           ? 'фактические'
           : 'плановые'
         } показатели за {moment().format('DD.MM.YYYY')}

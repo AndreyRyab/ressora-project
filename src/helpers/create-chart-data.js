@@ -4,6 +4,8 @@ import {
 } from '../components/chart/chartStyles';
 
 const createChartData = (dataToShow) => {
+  console.log('createChartData, input: ', dataToShow);
+
   let newChartData = dataToShow.plan.operation_list.reduce(
     (acc, item) => {
       acc.labels.push(item.title);
@@ -27,34 +29,26 @@ const createChartData = (dataToShow) => {
 
   if (dataToShow.fact.length) {
 
-    factChartDataObj = dataToShow.fact.reduce((acc, dataInput) => {
+    const factChartDataObj = dataToShow.fact.reduce((acc, dataInput) => {
       dataInput.operation_list.forEach(operation => {
         acc[operation.brief]
-        ? acc[operation.brief] += operation.quantity
-        : acc[operation.brief] = operation.quantity;
+        ? (acc[operation.brief] = acc[operation.brief] + operation.quantity)
+        : (acc[operation.brief] = operation.quantity);
       });
       return acc;
-    })
+    }, {});
 
     factChartData = {
       data: [NaN, ...Object.values(factChartDataObj), NaN],
     }
-    
-    /* .operation_list.reduce(
-      (acc, item) => {
-        acc.data.push(item.quantity);
-        return acc;
-      },
-      {
-        data: [NaN],
-        ...factChartStyle,
-      }
-    ); */
-    /* factChartData.data.push(NaN); */
-    console.log(factChartData)
   }
 
   if (factChartData) newChartData.datasets.push({ ...factChartData, ...factChartStyle });
+
+  console.log('createChartData, output: ', {
+    ...newChartData,
+    date: dataToShow.date,
+  });
 
   return ({
     ...newChartData,

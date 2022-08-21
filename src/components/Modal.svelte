@@ -14,7 +14,7 @@
   };
 
   export function hide() {
-    /* chartData.update(p => p = $currentSummary); */
+    chartData.update(p => p = $currentSummary.chartData);
     isInputModalOpen.update(p => p = false);
     shown = false;
   };
@@ -45,7 +45,6 @@
     width: 100%;
     height: 100%;
     box-sizing: border-box;
-    background-color: rgb(0, 0, 0);
     background-color: rgba(0, 0, 0, 0.8);
   }
   

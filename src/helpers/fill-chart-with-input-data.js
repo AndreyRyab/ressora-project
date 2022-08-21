@@ -3,7 +3,7 @@ import {
   factChartStyle,
 } from '../components/chart/chartStyles';
 
-const fillChartWithInputData = (summaryForm, plan) => {
+const fillChartWithInputData = (summaryForm, isPlan) => {
   let newChartData = summaryForm.reduce(
     (acc, item) => {
       acc.labels.push(item.title);
@@ -21,7 +21,7 @@ const fillChartWithInputData = (summaryForm, plan) => {
 
   let inputChartData;
 
-  if (plan) {
+  if (isPlan) {
     inputChartData = {
       datasets: [{
         ...newChartData,

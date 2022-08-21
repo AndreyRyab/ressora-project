@@ -48,3 +48,7 @@ export const chartData = writable({});
 export const isInputModalOpen = writable(false);
 
 export const inputDate = writable(null);
+
+export const inputDateStart = writable(null);
+
+export const inputDateEnd = writable(null);

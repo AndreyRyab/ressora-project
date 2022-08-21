@@ -103,6 +103,18 @@ exports.getSummary = (req, res) => {
         if (!summaryList.length) {
           return res.status(404).send({ message: NOT_FOUND });
         }
+        
+        if (summaryList.length > 2) {
+          let chartDataTotal = summaryList.reduce((acc, summary) => {
+              
+          }, []);
+          const result = {
+            startDate: summaryList[0].date,
+            endDate: summaryList.slice(-1).date,
+          }
+          return res.status(200).send(chartDataTotal);
+        }
+
         return res.status(200).send(summaryList);
       });
   } catch (err) {
@@ -121,25 +133,3 @@ exports.returnTemplate = (req, res) => {
     message: AUTH_ERROR,
   });
 };
-
-
-/* {
-  date: '2022-07-01T21:19:20+03:00',
-  prod_line: 1,
-  created_by: '62aee101ea05f36af609da19',
-  updated_by: '62aee101ea05f36af609da19',
-  plan:  {
-    operation_list: [{
-      title: 'Test operation',
-      brief: 'Test operation brief',
-      quantity: 42,
-    }],
-  },
-  fact: {
-    operation_list: [{
-      title: 'Test operation fact',
-      brief: 'Test operation fact brief',
-      quantity: 45,
-    }],
-  },
-} */
