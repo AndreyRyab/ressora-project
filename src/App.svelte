@@ -27,6 +27,11 @@
   import Modal from './components/Modal.svelte';
   import Chart from './components/chart/Chart.svelte';
   
+  import {
+    planChartStyle,
+    factChartStyle,
+  } from './components/chart/chartStyles';
+
   import { getErrorStatus, showErrorMessage } from './errors/error-handler';
   import { operations } from './data';
   
@@ -246,15 +251,28 @@
         chartData.update(p => p = $currentSummary.chartData);
       }
 
+      // !!!!!!!!!
       if (params.method === 'getCertainSummaries') {
-        certainSummaryList.update(
-          p => p = {
-            ...data[0],
-            chartData: createChartData(data[0]),
-          }
-        );
-
-        chartData.update(p => p = $certainSummaryList.chartData);
+        console.log('data: ', data)
+        let dataToChart = {
+          labels: data.labels,
+          datasets: [
+            {
+              data: data.datasets[0].data,
+              ...planChartStyle,
+            }
+          ],
+        };
+        if (data.datasets.length > 1) {
+          dataToChart.datasets.push({
+            data: data.datasets[1].data,
+              ...factChartStyle,
+          })
+        }
+        console.log('dataToChart: ', dataToChart)
+        certainSummaryList.update(p => p = dataToChart);
+        
+        chartData.update(p => p = { ...$certainSummaryList, date: data.date });
 
         inputDate.update(p => p = null);
       }

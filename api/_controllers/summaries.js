@@ -1,5 +1,7 @@
 const Summary = require('../_models/summary');
 
+const { createChartData } = require('../_utils/create-chart-data');
+
 const {
   NOT_FOUND,
   CONFLICT_SUMMARY_ERROR,
@@ -103,8 +105,8 @@ exports.getSummary = (req, res) => {
         if (!summaryList.length) {
           return res.status(404).send({ message: NOT_FOUND });
         }
-        
-        if (summaryList.length > 2) {
+
+        /* if (summaryList.length > 2) {
           let chartDataTotal = summaryList.reduce((acc, summary) => {
               
           }, []);
@@ -113,9 +115,10 @@ exports.getSummary = (req, res) => {
             endDate: summaryList.slice(-1).date,
           }
           return res.status(200).send(chartDataTotal);
-        }
+        } */
+        const result = createChartData(summaryList[0]);
 
-        return res.status(200).send(summaryList);
+        return res.status(200).send(result);
       });
   } catch (err) {
     console.log(err.message)
