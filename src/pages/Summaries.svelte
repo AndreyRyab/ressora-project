@@ -1,30 +1,30 @@
 <script>
-  import moment from 'moment';
+  import moment from "moment";
   import {
     currentUser,
     chartData,
-    certainSummaryList,
+    certainSummariesChartData,
     currentSummary,
     previousSummary,
     isPending,
     inputDate,
     inputDateStart,
     inputDateEnd,
-  } from '../stores';
+  } from "../stores";
 
-  import { createEventDispatcher, onMount } from 'svelte';
+  import { createEventDispatcher, onMount } from "svelte";
 
-  import { push } from 'svelte-spa-router';
+  import { push } from "svelte-spa-router";
 
-  import Chart from '../components/chart/Chart.svelte';
-  
+  import Chart from "../components/chart/Chart.svelte";
+
   const dispatch = createEventDispatcher();
 
   let errorMessage;
 
   let isPreviousSummary = false;
 
-  const now = moment().format('YYYY-MM-DD');
+  const now = moment().format("YYYY-MM-DD");
 
   onMount(async () => {
     if ($currentUser._id && $currentSummary.date) {
@@ -32,48 +32,47 @@
     }
     if ($currentUser._id) {
       await findSummary({
-        method: 'getLastSummaries',
-        startPeriod: moment(now).subtract(1, 'months').format(),
-        endPeriod: moment(now).add(1, 'd').format(),
+        method: "getLastSummaries",
+        startPeriod: moment(now).subtract(1, "months").format(),
+        endPeriod: moment(now).add(1, "d").format(),
       });
     } else {
-      push('/signin');
+      push("/signin");
     }
   });
 
   $: if ($inputDate) {
     findSummary({
-      method: 'getCertainSummaries',
+      method: "getCertainSummaries",
       start: moment($inputDate).format(),
-      end: moment($inputDate).add(1, 'd').format(),
+      end: moment($inputDate).add(1, "d").format(),
     });
   }
 
   const findSummary = (params) => {
-    dispatch('routeEvent', params);
+    dispatch("routeEvent", params);
   };
 
   const togglePrevCurrentSummary = (summary = null) => {
-    if (summary === 'current') {
-      chartData.update(p => p = $currentSummary.chartData);
+    if (summary === "current") {
+      chartData.update((p) => (p = $currentSummary));
       return;
     }
     isPreviousSummary = !isPreviousSummary;
     if ($chartData.date === $currentSummary.date) {
-      chartData.update(p => p = $previousSummary.chartData);
+      chartData.update((p) => (p = $previousSummary));
       return;
     }
-    chartData.update(p => p = $currentSummary.chartData);
+    chartData.update((p) => (p = $currentSummary));
   };
 
   const searchSummaries = () => {
     findSummary({
-      method: 'getCertainSummaries',
+      method: "getCertainSummaries",
       start: moment($inputDateStart).format(),
-      end: moment($inputDateEnd).add(1, 'd').format(),
+      end: moment($inputDateEnd).add(1, "d").format(),
     });
   };
-
 </script>
 
 <style>
@@ -150,12 +149,13 @@
     <div class="summaries__chart">
       {#if !$isPending}
         <h2 class="summaries__chart-title">
-          Данные за {moment($chartData?.date).format('DD.MM.YYYY') || ''}
+          Данные за
+          {moment($chartData?.date).format('DD.MM.YYYY') || ''}
         </h2>
       {/if}
 
       <Chart />
-    </div>  
+    </div>
 
     <div class="summaries__filter">
       {#if errorMessage}
@@ -180,21 +180,19 @@
             type="button"
             class="summaries__days-toggler"
             value={isPreviousSummary ? `Вернуться на ${moment($currentSummary.date).format('DD.MM.YYYY')}` : 'Предыдущий день'}
-            on:click={() => togglePrevCurrentSummary()}
-          />
+            on:click={() => togglePrevCurrentSummary()} />
         </div>
       {/if}
 
-      {#if $certainSummaryList.length}
-      <div>
-        <input
-          disabled={$isPending}
-          type="button"
-          class="summaries__days-toggler"
-          value={`Вернуться на ${moment($currentSummary.date).format('DD.MM.YYYY')}`}
-          on:click={() => togglePrevCurrentSummary('current')}
-        />
-      </div>
+      {#if $certainSummariesChartData.length}
+        <div>
+          <input
+            disabled={$isPending}
+            type="button"
+            class="summaries__days-toggler"
+            value={`Вернуться на ${moment($currentSummary.date).format('DD.MM.YYYY')}`}
+            on:click={() => togglePrevCurrentSummary('current')} />
+        </div>
       {/if}
 
       <form class="summaries__form">
@@ -203,17 +201,16 @@
         <div class="summaries__form-row">
           <label for="start">с</label>
           <input
-            disabled={$isPending}  
+            disabled={$isPending}
             name="start"
             type="date"
             min={'2022-08-06'}
             max={$inputDateEnd || moment().format('YYYY-MM-DD')}
             class="summaries__input-date"
             bind:value={$inputDateStart}
-            required
-          >
+            required />
         </div>
-        
+
         <div class="summaries__form-row">
           <label for="end">по</label>
           <input
@@ -224,18 +221,16 @@
             max={moment().format('YYYY-MM-DD')}
             class="summaries__input-date"
             bind:value={$inputDateEnd}
-            required
-            >
+            required />
         </div>
 
         <div class="summaries__form-row">
           <input
-          disabled={$isPending}
-          type="button"
-          class="summaries__days-toggler"
-          value="Показать"
-          on:click={() => searchSummaries()}
-        />
+            disabled={$isPending}
+            type="button"
+            class="summaries__days-toggler"
+            value="Показать"
+            on:click={() => searchSummaries()} />
         </div>
       </form>
     </div>

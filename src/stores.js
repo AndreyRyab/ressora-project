@@ -37,7 +37,7 @@ export const previousSummary = writable({
   chartData: null,
 });
 
-export const certainSummaryList = writable([]);
+export const certainSummariesChartData = writable([]);
 
 export const userList = writable([]);
 

@@ -89,7 +89,11 @@ exports.getSummary = (req, res) => {
           if (!summaryList.length) {
             return res.status(404).send({ message: NOT_FOUND });
           }
-          const result = summaryList.slice(-2).reverse();
+          const lastSummaries = summaryList.slice(-2).reverse();
+          const result = [
+            { ...createChartData(lastSummaries[0]), date: lastSummaries[0].date},
+            { ...createChartData(lastSummaries[1]), date: lastSummaries[1].date},
+          ];
           return res.status(200).send(result);
         });
       return;
