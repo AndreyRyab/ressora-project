@@ -43,7 +43,7 @@ export const userList = writable([]);
 
 export const isPending = writable(false);
 
-export const chartData = writable({});
+export const chartData = writable(null);
 
 export const isInputModalOpen = writable(false);
 

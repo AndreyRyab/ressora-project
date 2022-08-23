@@ -55,14 +55,14 @@
 
   const now = moment().format();
 
-  /* onMount(async () => {
+  onMount(async () => {
     if (localStorage.getItem("ressoraLoggedIn")) {
       await getUser();
       push("/data");
     } else {
       push("/signin");
     }
-  }); */
+  });
 
   $: if (loggedIn) {
     localStorage.setItem("ressoraLoggedIn", true);
@@ -222,6 +222,7 @@
 
   const findSummary = async (params) => {
     errorMessage = null;
+    chartData.update((p) => (p = null));
     try {
       isPending.update((p) => (p = true));
 
@@ -230,32 +231,31 @@
       console.log("findSummary, data: ", data);
 
       if (params.method === "getLastSummaries") {
-        currentSummary.update(p => p = { ...addStylesToChart(data[0]), date: data[0].date});
+        currentSummary.update(p => p = { ...addStylesToChart(data[0]), date: [data[0].date]});
         console.log("currentSummary: ", $currentSummary);
 
         chartData.update((p) => (p = $currentSummary));
 
         if (data[1]) {
-          previousSummary.update(p => p = { ...addStylesToChart(data[1]), date: data[1].date});
+          previousSummary.update(p => p = { ...addStylesToChart(data[1]), date: [data[1].date]});
           console.log("previousSummary: ", $previousSummary);
         }
       }
 
-      // !!!!!!!!!
       if (params.method === "getCertainSummaries") {
         certainSummariesChartData.update((p) => (p = addStylesToChart(data)));
 
         chartData.update(p => p = { ...$certainSummariesChartData, date: data.date });
 
-        inputDate.update((p) => (p = null));
+        inputDate.update(p => p = null);
       }
     } catch (error) {
       errorMessage = showErrorMessage(error);
       if (params.method === "getCertainSummaries")
-        chartData.update((p) => (p = $currentSummary));
-      inputDate.update((p) => (p = null));
+        chartData.update(p => p = $currentSummary);
+      inputDate.update(p => p = null);
     } finally {
-      isPending.update((p) => (p = false));
+      isPending.update(p => p = false);
     }
   };
 

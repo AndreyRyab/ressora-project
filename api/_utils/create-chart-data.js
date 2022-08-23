@@ -1,6 +1,4 @@
 module.exports.createChartData = (dataToShow) => {
-  console.log('createChartData, input: ', dataToShow);
-
   let newChartData = dataToShow.plan.operation_list.reduce(
     (acc, item) => {
       acc.labels.push(item.title);
@@ -22,7 +20,6 @@ module.exports.createChartData = (dataToShow) => {
   let factChartData = null;
 
   if (dataToShow.fact.length) {
-
     const factChartDataObj = dataToShow.fact.reduce((acc, dataInput) => {
       dataInput.operation_list.forEach(operation => {
         acc[operation.brief]
@@ -39,13 +36,8 @@ module.exports.createChartData = (dataToShow) => {
 
   if (factChartData) newChartData.datasets.push(factChartData);
 
-  console.log('createChartData, output: ', {
-    ...newChartData,
-    date: dataToShow.date,
-  });
-
   return ({
     ...newChartData,
-    date: dataToShow.date,
+    date: [dataToShow.date],
   });
 };

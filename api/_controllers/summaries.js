@@ -1,6 +1,9 @@
+const moment = require('moment');
+
 const Summary = require('../_models/summary');
 
 const { createChartData } = require('../_utils/create-chart-data');
+const { createTotalChartData } = require('../_utils/create-total-chart-data');
 
 const {
   NOT_FOUND,
@@ -91,8 +94,8 @@ exports.getSummary = (req, res) => {
           }
           const lastSummaries = summaryList.slice(-2).reverse();
           const result = [
-            { ...createChartData(lastSummaries[0]), date: lastSummaries[0].date},
-            { ...createChartData(lastSummaries[1]), date: lastSummaries[1].date},
+            { ...createChartData(lastSummaries[0]), date: moment(lastSummaries[0].date).format('DD.MM.YYYY')},
+            { ...createChartData(lastSummaries[1]), date: moment(lastSummaries[1].date).format('DD.MM.YYYY')},
           ];
           return res.status(200).send(result);
         });
@@ -110,16 +113,11 @@ exports.getSummary = (req, res) => {
           return res.status(404).send({ message: NOT_FOUND });
         }
 
-        /* if (summaryList.length > 2) {
-          let chartDataTotal = summaryList.reduce((acc, summary) => {
-              
-          }, []);
-          const result = {
-            startDate: summaryList[0].date,
-            endDate: summaryList.slice(-1).date,
-          }
-          return res.status(200).send(chartDataTotal);
-        } */
+        if (summaryList.length > 2) {
+          const result = createTotalChartData(summaryList);
+ 
+          return res.status(200).send(result); 
+        }
         const result = createChartData(summaryList[0]);
 
         return res.status(200).send(result);

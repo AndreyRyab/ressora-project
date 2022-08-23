@@ -147,10 +147,9 @@
 <section class="summaries">
   <section class="summaries__chart-wrapper">
     <div class="summaries__chart">
-      {#if !$isPending}
+      {#if !$isPending && $chartData}
         <h2 class="summaries__chart-title">
-          Данные за
-          {moment($chartData?.date).format('DD.MM.YYYY') || ''}
+          Данные за { $chartData.date.length === 1 ? $chartData?.date : `${moment($chartData?.date[0]).format('DD.MM.YYYY')} - ${moment($chartData?.date[1]).format('DD.MM.YYYY')}`}
         </h2>
       {/if}
 
@@ -179,7 +178,7 @@
             disabled={$isPending}
             type="button"
             class="summaries__days-toggler"
-            value={isPreviousSummary ? `Вернуться на ${moment($currentSummary.date).format('DD.MM.YYYY')}` : 'Предыдущий день'}
+            value={isPreviousSummary ? `Вернуться на ${$currentSummary.date}` : 'Предыдущий день'}
             on:click={() => togglePrevCurrentSummary()} />
         </div>
       {/if}
@@ -190,7 +189,7 @@
             disabled={$isPending}
             type="button"
             class="summaries__days-toggler"
-            value={`Вернуться на ${moment($currentSummary.date).format('DD.MM.YYYY')}`}
+            value={`Вернуться на ${$currentSummary.date}`}
             on:click={() => togglePrevCurrentSummary('current')} />
         </div>
       {/if}
